@@ -1,185 +1,99 @@
-import csv
-import os
-import pathlib
-import subprocess
-import time
-from collections import deque
-from datetime import datetime
-
 import cv2
 import librosa
 import matplotlib.pyplot as plt
+import mediapipe as mp
 import numpy as np
 import sounddevice as sd
-import soundfile as sf
-from matplotlib import rcParams
+from scipy.signal import find_peaks
 
-rcParams['font.family'] = 'MS Gothic'
 
-SAMPLING_RATE = 22050
-BLOCK_SIZE = 2048
-volume_level = 0.0
-audio_buffer = deque(maxlen=BLOCK_SIZE)
+# === 音声をマイクから録音してビートを抽出 ===
+def record_and_extract_beats(duration=10, sr=22050):
+    print(f"[INFO] マイクから {duration}秒 録音中...")
+    recording = sd.rec(int(duration * sr), samplerate=sr, channels=1, dtype='float32')
+    sd.wait()
+    print("[INFO] 録音完了、ビート解析中...")
 
-base_dir = pathlib.Path(__file__).resolve().parent.parent
-log_dir = base_dir / "log"
-video_dir = base_dir / "video"
-os.makedirs(log_dir, exist_ok=True)
-os.makedirs(video_dir, exist_ok=True)
+    y = recording.flatten()
+    tempo, beats = librosa.beat.beat_track(y=y, sr=sr)
+    beat_times = librosa.frames_to_time(beats, sr=sr)
+    print(f"[INFO] 検出されたビート数: {len(beat_times)}")
+    return beat_times
 
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-audio_record = []
+# === 動画から右手首の動作タイミング抽出 ===
+def extract_movement(video_path):
+    cap = cv2.VideoCapture(video_path)
+    frame_rate = cap.get(cv2.CAP_PROP_FPS)
+    y_positions = []
 
-devices = sd.query_devices()
-mic_device = next((i for i, dev in enumerate(devices)  if dev['max_input_channels'] > 0 and ("usb" in dev['name'].lower() or "external" in dev['name'].lower())), sd.default.device[0])
+    mp_pose = mp.solutions.pose
+    pose = mp_pose.Pose()
 
-def audio_record_callback(indata, frames, time_info, status):
-    audio_buffer.extend(indata[:, 0])
-    audio_record.append(indata.copy())
-    global volume_level
-    volume_level = np.linalg.norm(indata[:, 0]) / frames
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
 
-audio_stream = sd.InputStream(samplerate=SAMPLING_RATE, channels=1, callback=audio_record_callback, device=mic_device, blocksize=BLOCK_SIZE)
-audio_stream.start()
+        image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = pose.process(image_rgb)
 
-cap = cv2.VideoCapture(0)
-frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        if results.pose_landmarks:
+            wrist = results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_WRIST]
+            y_positions.append(wrist.y)
+        else:
+            y_positions.append(np.nan)
 
-video_filename = video_dir / f"stillness_video_{timestamp}.mp4"
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-out = cv2.VideoWriter(str(video_filename), fourcc, 1.0, (frame_width, frame_height))
+    cap.release()
+    y_array = np.array(y_positions)
+    y_array = np.nan_to_num(y_array, nan=np.nanmean(y_array))
 
-csv_filename = log_dir / f"stillness_log_{timestamp}.csv"
-with open(csv_filename, 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile)
-    writer.writerow(["time", "motion", "volume", "beat_strength", "motion_delta", "stillness_score", "label"])
+    peaks, _ = find_peaks(-y_array, distance=frame_rate * 0.4)
+    movement_times = peaks / frame_rate
+    print(f"[INFO] 検出された動作数: {len(movement_times)}")
+    return movement_times
 
-prev_frame = None
-motion_buffer = deque(maxlen=100)
-vol_buffer = deque(maxlen=100)
-score_buffer = deque(maxlen=100)
-beat_buffer = deque(maxlen=100)
-motion_delta_buffer = deque(maxlen=100)
+# === ズレ統計量 ===
+def compute_offsets(beat_times, movement_times):
+    differences = []
+    for m_time in movement_times:
+        closest_beat = min(beat_times, key=lambda b: abs(b - m_time))
+        differences.append(abs(closest_beat - m_time))
 
-plt.ion()
-fig, axs = plt.subplots(5, 1, figsize=(8, 12))
+    avg_offset = np.mean(differences)
+    std_offset = np.std(differences)
+    return differences, avg_offset, std_offset
 
-def classify_stillness(score):
-    if score > 0.7:
-        return "Silent"
-    elif score > 0.4:
-        return "Neutral"
-    else:
-        return "Noisy"
-
-frame_count = 0
-start_time = time.time()
-
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
-
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    blur = cv2.GaussianBlur(gray, (21, 21), 0)
-    if prev_frame is None:
-        prev_frame = blur
-        continue
-
-    frame_delta = cv2.absdiff(prev_frame, blur)
-    motion_intensity = np.sum(frame_delta) / 1000000
-    motion_intensity = np.clip(motion_intensity, 0, 1)
-    prev_frame = blur
-
-    vol = np.clip(volume_level, 0, 1)
-
-    # 音声：ビート強度の推定
-    if len(audio_buffer) >= BLOCK_SIZE:
-        y = np.array(audio_buffer, dtype=np.float32)
-        onset_env = librosa.onset.onset_strength(y=y, sr=SAMPLING_RATE)
-        tempo, beats = librosa.beat.beat_track(onset_envelope=onset_env, sr=SAMPLING_RATE)
-        beat_strength = np.mean(onset_env[beats]) if len(beats) > 0 else 0.0
-        beat_strength = np.clip(beat_strength / 10, 0, 1)
-    else:
-        beat_strength = 0.0
-
-    # 映像：動きの変化（衝撃）を算出
-    if len(motion_buffer) > 1:
-        motion_delta = abs(motion_intensity - motion_buffer[-1])
-        motion_delta = np.clip(motion_delta, 0, 1)
-    else:
-        motion_delta = 0.0
-
-    # スコア計算（すべて掛け算で統合）
-    score = (1 - vol) * (1 - motion_intensity) * (1 - beat_strength) * (1 - motion_delta)
-    label = classify_stillness(score)
-
-    current_time = datetime.now().strftime("%H:%M:%S.%f")[:-3]
-    with open(csv_filename, 'a', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow([current_time, motion_intensity, vol, beat_strength, motion_delta, score, label])
-
-    motion_buffer.append(motion_intensity)
-    vol_buffer.append(vol)
-    score_buffer.append(score)
-    beat_buffer.append(beat_strength)
-    motion_delta_buffer.append(motion_delta)
-
-    axs[0].cla()
-    axs[0].plot(motion_buffer)
-    axs[0].set_title("Motion Intensity")
-
-    axs[1].cla()
-    axs[1].plot(vol_buffer)
-    axs[1].set_title("Sound Volume")
-
-    axs[2].cla()
-    axs[2].plot(beat_buffer, color='orange')
-    axs[2].set_title("Beat Strength")
-
-    axs[3].cla()
-    axs[3].plot(motion_delta_buffer, color='red')
-    axs[3].set_title("Motion Delta (Impact)")
-
-    axs[4].cla()
-    axs[4].plot(score_buffer, color='purple')
-    axs[4].set_title("Stillness in Motion")
-
+# === 可視化 ===
+def plot_results(beat_times, movement_times, differences):
+    plt.figure(figsize=(10, 4))
+    plt.vlines(beat_times, 0, 1, color='blue', label='マイク音ビート')
+    plt.vlines(movement_times, 0, 1, color='red', label='ダンス動作')
+    plt.legend()
+    plt.title("マイク音とダンス動作のズレ")
+    plt.xlabel("時間 [秒]")
+    plt.yticks([])
     plt.tight_layout()
-    plt.pause(0.01)
+    plt.show()
 
-    display_text = f"Stillness in Motion: {score:.2f} ({label})"
-    cv2.putText(frame, display_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 255), 2)
-    cv2.imshow("Live", frame)
-    out.write(frame)
+    plt.figure(figsize=(8, 3))
+    plt.hist(differences, bins=20, color='purple', alpha=0.7)
+    plt.title("ズレの分布")
+    plt.xlabel("ズレ時間（秒）")
+    plt.ylabel("回数")
+    plt.tight_layout()
+    plt.show()
 
-    frame_count += 1
-    if cv2.waitKey(1) & 0xFF == 27:
-        break
+# === メイン処理 ===
+if __name__ == "__main__":
+    video_path = "your_dance.mp4"
+    duration = 10  # 録音時間（秒）
 
-cap.release()
-out.release()
-cv2.destroyAllWindows()
-audio_stream.stop()
-audio_stream.close()
-audio_data = np.concatenate(audio_record, axis=0)
-audio_filename = video_dir / f"stillness_audio_{timestamp}.wav"
-sf.write(audio_filename, audio_data, SAMPLING_RATE)
+    beat_times = record_and_extract_beats(duration=duration)
+    movement_times = extract_movement(video_path)
+    differences, avg_offset, std_offset = compute_offsets(beat_times, movement_times)
 
-elapsed_time = time.time() - start_time
-actual_fps = frame_count / elapsed_time
-print(f"🎯 実測FPS: {actual_fps:.2f}")
+    print(f"\n--- 結果 ---")
+    print(f"平均ズレ: {avg_offset:.3f} 秒")
+    print(f"標準偏差: {std_offset:.3f} 秒")
 
-final_filename = video_dir / f"stillness_final_{timestamp}.mp4"
-subprocess.call([
-    "ffmpeg",
-    "-y",
-    "-r", f"{actual_fps:.2f}",
-    "-i", str(video_filename),
-    "-i", str(audio_filename),
-    "-c:v", "copy",
-    "-c:a", "aac",
-    "-strict", "experimental",
-    str(final_filename)
-])
+    plot_results(beat_times, movement_times, differences)
