@@ -6,7 +6,7 @@ Dancemotion のファイルを管理するリポジトリです。
 
 ### ①以下のコマンドでクローン化します
 
-[git clone](https://github.com/Kosaki-1AE/Dancemotion.git)
+[git clone]("https://github.com/Kosaki-1AE/Dancemotion.git")
 
 cd Dancemotion(移したいファイルがあるフォルダーに移動)
 
