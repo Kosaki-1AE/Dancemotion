@@ -4,9 +4,10 @@ Dancemotion のファイルを管理するリポジトリです。
 
 ## 始め方
 
-### ①以下のコマンドでクローン化します
+### ①下をクリックしてクローン化します
 
-[git clone]("https://github.com/Kosaki-1AE/Dancemotion.git")
+```bash
+git clone https://github.com/Kosaki-1AE/Dancemotion.git
 
 cd Dancemotion(移したいファイルがあるフォルダーに移動)
 
@@ -14,7 +15,7 @@ cd Dancemotion(移したいファイルがあるフォルダーに移動)
 
 git add .(「.」なら全て、指定の場合は指定のものにしてくだはい)
 
-git commit -m "変更内容"
+git commit -m "内容"
 
 ### ③ プッシュ（初回のみ -u） でリモートリポジトリに反映させます(これで「全員が見れる」という状態になりやす。)
 
@@ -27,6 +28,7 @@ git fetch origin main(ここまでで一旦確認できる状態になります)
 git log HEAD..origin/main(これでローカルとリモートの差分を確認できます)
 
 git merge origin/main (ローカルのファイルが最新の状態になります)
+```
 
 ## Author
 
