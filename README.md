@@ -22,11 +22,11 @@ git push -u origin main
 
 ### ④ プル で現在の最新状態を取得します(これで「最新の状態をローカルに保存する」という状態になりやす。)
 
-git fetch origin main #ここまでで一旦確認できる状態になります
+git fetch origin main(ここまでで一旦確認できる状態になります)
 
-git log HEAD..origin/main #これでローカルとリモートの差分を確認できます
+git log HEAD..origin/main(これでローカルとリモートの差分を確認できます)
 
-git merge origin/main #ローカルのファイルが最新の状態になります
+git merge origin/main (ローカルのファイルが最新の状態になります)
 
 ## Author
 
