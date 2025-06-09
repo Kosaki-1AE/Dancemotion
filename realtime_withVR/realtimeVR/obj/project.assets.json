@@ -14,11 +14,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\kos04\\Documents\\4thGrade\\SpecializedSeminar\\All_sites\\Dancemotion\\realtime_withVR\\realtimeVR\\realtimeVR.csproj",
+      "projectUniqueName": "C:\\Users\\kos04\\Documents\\ドキュメント\\Programs\\Dancemotion\\realtime_withVR\\realtimeVR\\realtimeVR.csproj",
       "projectName": "realtimeVR",
-      "projectPath": "C:\\Users\\kos04\\Documents\\4thGrade\\SpecializedSeminar\\All_sites\\Dancemotion\\realtime_withVR\\realtimeVR\\realtimeVR.csproj",
+      "projectPath": "C:\\Users\\kos04\\Documents\\ドキュメント\\Programs\\Dancemotion\\realtime_withVR\\realtimeVR\\realtimeVR.csproj",
       "packagesPath": "C:\\Users\\kos04\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\kos04\\Documents\\4thGrade\\SpecializedSeminar\\All_sites\\Dancemotion\\realtime_withVR\\realtimeVR\\obj\\",
+      "outputPath": "C:\\Users\\kos04\\Documents\\ドキュメント\\Programs\\Dancemotion\\realtime_withVR\\realtimeVR\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -72,7 +72,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.203/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.204/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
