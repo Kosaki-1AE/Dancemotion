@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MNIST × 感情ジャーナル</title>
+</head>
+<body>
+    <h1>🧠 MNIST × 感情ジャーナル 学習アプリ</h1>
+    <form method="POST">
+        <label>エポック数 (1〜10):</label>
+        <input type="number" name="epochs" min="1" max="10" value="5" required><br><br>
+
+        {% for i in range(10) %}
+            <label>📝 感情ジャーナル Epoch {{ i+1 }}:</label><br>
+            <textarea name="journal{{ i+1 }}" rows="3" cols="60"></textarea><br><br>
+        {% endfor %}
+
+        <button type="submit">🚀 学習スタート</button>
+    </form>
+
+    {% if result %}
+        <h2>{{ result }}</h2>
+    {% endif %}
+
+    {% if image %}
+        <img src="data:image/png;base64,{{ image }}">
+    {% endif %}
+</body>
+</html>
