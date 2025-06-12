@@ -1,5 +1,5 @@
 def map_consonants_to_scale(text):
-    # 子音 → ドレミ音階のマッピング
+    # 子音 → ドレミ音階のマッピング これを色々変更していきます、はい。
     consonant = {
         'a': 'C',
         'b': 'C#',
@@ -20,13 +20,36 @@ def map_consonants_to_scale(text):
         'q': 'E',
         'r': 'F',
         's': 'F#',
+        'ss': 'F#',
         't': 'G',
         'u': 'G#',
         'v': 'A',
         'w': 'A#',
         'x': 'B',
         'y': 'C',
-        'z': 'C#'
+        'z': 'C#',
+        'ar': 'M',
+        'ee': 'M',
+        'ea': 'M',
+        'oo': 'M',
+        'dg': 'M',
+        'ch': 'M',
+        'tch': 'F#',
+        'th': 'M',
+        'ts': 'F#',
+        'sh': 'M',
+        'zh': 'M',
+        'si': 'M',
+        'ng': 'M',
+        'aw': 'M',
+        'or': 'M',
+        'ay': 'M',
+        'ei': 'M',
+        'igh': 'M',
+        'ow': 'M',
+        'ou': 'M',
+        'oi': 'M',
+        'oy': 'M'
     }
 
     notes = []
