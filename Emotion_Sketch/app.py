@@ -1,7 +1,7 @@
 # ファイル: app.py　MNISTなんで一旦無視でおｋ
 from flask import Flask, render_template, request
 
-from mnist_journal_logger import train_model_with_journal
+from Emotion_Sketch.journal_logger import train_model_with_journal
 
 app = Flask(__name__)
 

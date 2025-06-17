@@ -1,12 +1,12 @@
-
 import json
 import os
-import numpy as np
-import sounddevice as sd
 import tkinter as tk
 from tkinter import simpledialog
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 import matplotlib.pyplot as plt
+import numpy as np
+import sounddevice as sd
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 EMOTION_FILE = "emotions.json"
 
