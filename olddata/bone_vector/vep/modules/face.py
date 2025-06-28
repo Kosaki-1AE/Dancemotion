@@ -1,17 +1,25 @@
-# face.py
+# vep/face.py
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 from mediapipe.framework.formats import landmark_pb2
+import os
 
 class FaceDetector:
-    def __init__(self, model_path='models/face_landmarker.task'):
-        base_options = python.BaseOptions(model_asset_path=model_path)
+    def __init__(self, model_filename='face_landmarker.task'):
+        current_script_dir = os.path.dirname(os.path.abspath(__file__))
+        full_model_path = os.path.join(current_script_dir, model_filename)
+
+        print(f"FaceDetector: Attempting to load model from: {full_model_path}")
+        if not os.path.exists(full_model_path):
+            raise FileNotFoundError(f"FaceDetector: Model file not found at: {full_model_path}")
+
+        base_options = python.BaseOptions(model_asset_path=full_model_path)
         self.options = vision.FaceLandmarkerOptions(
             base_options=base_options,
             output_face_blendshapes=True,
-            output_facial_transformation_matrixes=True,
-            running_mode=vision.RunningMode.IMAGE,
+            # REMOVED: output_facial_transformation_matrices=True,
+            running_mode=vision.RunningMode.IMAGE, # Using IMAGE mode
             num_faces=1
         )
         self.detector = vision.FaceLandmarker.create_from_options(self.options)
@@ -50,4 +58,3 @@ class FaceDetector:
 
     def close(self):
         self.detector.close()
-

@@ -1,16 +1,24 @@
-# pose.py
+# vep/pose.py
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 from mediapipe.framework.formats import landmark_pb2
+import os
 
 class PoseDetector:
-    def __init__(self, model_path='models/pose_landmarker_heavy.task'):
-        base_options = python.BaseOptions(model_asset_path=model_path)
+    def __init__(self, model_filename='pose_landmarker_heavy.task'):
+        current_script_dir = os.path.dirname(os.path.abspath(__file__))
+        full_model_path = os.path.join(current_script_dir, model_filename)
+
+        print(f"PoseDetector: Attempting to load model from: {full_model_path}")
+        if not os.path.exists(full_model_path):
+            raise FileNotFoundError(f"PoseDetector: Model file not found at: {full_model_path}")
+
+        base_options = python.BaseOptions(model_asset_path=full_model_path)
         self.options = vision.PoseLandmarkerOptions(
             base_options=base_options,
             output_segmentation_masks=False,
-            running_mode=vision.RunningMode.IMAGE
+            running_mode=vision.RunningMode.IMAGE # Using IMAGE mode
         )
         self.detector = vision.PoseLandmarker.create_from_options(self.options)
 

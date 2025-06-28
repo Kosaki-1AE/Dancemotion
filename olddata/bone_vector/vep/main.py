@@ -2,9 +2,11 @@
 import cv2
 import numpy as np
 import mediapipe as mp
+
 from face import FaceDetector
 from hands import HandDetector
 from pose import PoseDetector
+
 
 face_detector = FaceDetector()
 hand_detector = HandDetector()
