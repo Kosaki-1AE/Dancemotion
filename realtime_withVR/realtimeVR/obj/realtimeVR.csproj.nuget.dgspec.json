@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\kos04\\Documents\\GitHub\\Dancemotion\\realtime_withVR\\realtimeVR\\realtimeVR.csproj": {}
+    "D:\\GitHub\\Dancemotion\\realtime_withVR\\realtimeVR\\realtimeVR.csproj": {}
   },
   "projects": {
-    "C:\\Users\\kos04\\Documents\\GitHub\\Dancemotion\\realtime_withVR\\realtimeVR\\realtimeVR.csproj": {
+    "D:\\GitHub\\Dancemotion\\realtime_withVR\\realtimeVR\\realtimeVR.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\kos04\\Documents\\GitHub\\Dancemotion\\realtime_withVR\\realtimeVR\\realtimeVR.csproj",
+        "projectUniqueName": "D:\\GitHub\\Dancemotion\\realtime_withVR\\realtimeVR\\realtimeVR.csproj",
         "projectName": "realtimeVR",
-        "projectPath": "C:\\Users\\kos04\\Documents\\GitHub\\Dancemotion\\realtime_withVR\\realtimeVR\\realtimeVR.csproj",
+        "projectPath": "D:\\GitHub\\Dancemotion\\realtime_withVR\\realtimeVR\\realtimeVR.csproj",
         "packagesPath": "C:\\Users\\kos04\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\kos04\\Documents\\GitHub\\Dancemotion\\realtime_withVR\\realtimeVR\\obj\\",
+        "outputPath": "D:\\GitHub\\Dancemotion\\realtime_withVR\\realtimeVR\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
