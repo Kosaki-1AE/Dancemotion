@@ -1,43 +1,64 @@
-import json
-from pathlib import Path
+from collections import defaultdict
 
+import matplotlib.pyplot as plt
+import numpy as np
 from bvh import Bvh
 
-# === ファイル設定 ===
 bvh_path = "君の夜をくれ_Sasaki41.bvh"
-output_path = "bvh_pose_vectors.json"
 
-# === BVH読み込み ===
-with open(bvh_path, encoding="utf-8") as f:
+with open(bvh_path, encoding="utf-8", errors="ignore") as f:
     mocap = Bvh(f.read())
 
 frame_time = float(mocap.frame_time)
-frame_count = mocap.nframes
-joints = mocap.get_joints()
+num_frames = mocap.nframes
+duration = frame_time * num_frames
 
-output_data = []
+def classify_joint(name):
+    name = name.lower()
+    if any(k in name for k in ["hip", "spine", "root", "neck"]):
+        return "軸"
+    elif any(k in name for k in ["shoulder", "arm", "leg", "knee", "elbow"]):
+        return "骨"
+    else:
+        return "筋肉"
 
-for frame_idx in range(frame_count):
-    frame_info = {
-        "frame": frame_idx,
-        "timestamp_sec": round(frame_idx * frame_time, 3),
-        "landmarks": {}
-    }
-    for joint in joints:
-        joint_name = joint.name
-        try:
-            channels = mocap.joint_channels(joint_name)
-            if set(["Xposition", "Yposition", "Zposition"]).issubset(set(channels)):
-                pos = mocap.frame_joint_channels(frame_idx, joint_name, ["Xposition", "Yposition", "Zposition"])
-                frame_info["landmarks"][joint_name] = list(map(float, pos))
-        except LookupError:
-            continue  # 存在しないJoint名はスキップ
+joint_category = {}
+for joint in mocap.get_joints():
+    joint_category[joint.name] = classify_joint(joint.name)
 
+channel_map = mocap.get_joints_names()
+channel_counts = mocap.get_joints_channel_count()
 
-    output_data.append(frame_info)
+bins = int(duration / 0.5)
+category_activity = defaultdict(lambda: np.zeros(bins))
 
-# === JSON出力 ===
-with open(output_path, "w", encoding="utf-8") as f:
-    json.dump(output_data, f, ensure_ascii=False, indent=2)
+for frame_idx in range(num_frames):
+    frame_data = list(map(float, mocap.frame_joint_channel(frame_idx)))
+    time_bin = int((frame_idx * frame_time) / 0.5)
+    idx = 0
+    for joint_name, count in zip(channel_map, channel_counts):
+        cat = joint_category.get(joint_name, "筋肉")
+        joint_values = frame_data[idx:idx+count]
+        rotation_values = joint_values[-3:] if count >= 3 else []
+        movement = sum(abs(v) for v in rotation_values)
+        category_activity[cat][time_bin] += movement
+        idx += count
 
-print(f"✅ 完了！ {frame_count} フレーム分を {output_path} に保存しました")
+diff_metric = []
+for i in range(bins):
+    values = [category_activity["軸"][i], category_activity["骨"][i], category_activity["筋肉"][i]]
+    std_dev = np.std(values)
+    closeness = 1 / (std_dev + 1e-6)
+    diff_metric.append(closeness)
+
+times = [i * 0.5 for i in range(bins)]
+
+plt.figure(figsize=(6, 8))
+plt.barh(times, diff_metric, height=0.4, color="skyblue")
+plt.xlabel("3カテゴリ間の“動きの差の少なさ”")
+plt.ylabel("時間（秒）")
+plt.title("ワイ理論：軸・骨・筋肉の調和度（0.5秒ごと）")
+plt.gca().invert_yaxis()
+plt.grid(True, axis='x')
+plt.tight_layout()
+plt.show()
