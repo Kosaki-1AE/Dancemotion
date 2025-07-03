@@ -88,7 +88,7 @@ def run_frame_processing():
                 try:
                     # Put frame into the queue. Non-blocking with timeout
                     # This prevents producer from blocking indefinitely if consumer is slow
-                    frame_queue.put(buffer.tobytes(), timeout=0.1)
+                    frame_queue.put((buffer.tobytes(), current_blendshapes), timeout=0.1)
                 except queue.Full:
                     # If queue is full, skip this frame to keep up
                     pass
