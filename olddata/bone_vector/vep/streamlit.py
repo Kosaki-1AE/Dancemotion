@@ -105,12 +105,17 @@ if mode == "Realtime":
     st.subheader("Live Video Feed")
     live_feed_container = st.empty() # Create a specific container for the live feed
 
+    st.subheader("Facial Expression(Blendshapes)")
+    blendshapes_container = st.empty() #for blendshapes data
+    # Create an empty placeholder for blendshapes. We'll write to it dynamically.
+    blendshapes_display_area = st.empty()
+    
     # This loop runs continuously to display frames if the producer is active
     if st.session_state.producer_running:
         while st.session_state.producer_running: # Loop as long as the producer is flagged as running
             try:
                 # Get a frame from the queue with a short timeout
-                frame_bytes = frame_queue.get(timeout=0.05) # Reduced timeout for faster checks
+                frame_bytes,blendshapes_data = frame_queue.get(timeout=0.05) # Reduced timeout for faster checks
                 # Decode the JPEG bytes back to an OpenCV image
                 frame = cv2.imdecode(np.frombuffer(frame_bytes, np.uint8), cv2.IMREAD_COLOR)
                 
@@ -119,6 +124,93 @@ if mode == "Realtime":
                 
                 # Update the image in the Streamlit placeholder
                 live_feed_container.image(processed_rgb_frame, channels="RGB", use_container_width=True)
+            
+                # --- Display Blendshapes using st.progress ---
+                if blendshapes_data:
+                    # Collect all blendshape display elements into a list
+                    blendshape_elements = []
+                    for shape in blendshapes_data:
+                        name = shape['name']
+                        score = shape['score']
+                        # Append a markdown string for the label and a progress bar
+                        blendshape_elements.append(f"**{name}**: {score:.4f}")
+                        blendshape_elements.append(f"<div style='margin-bottom: 8px;'></div>") # Small spacing
+                        blendshape_elements.append(st.progress(score, text=None)) # Streamlit handles the bar and percentage text if needed
+                        
+                    # Clear the blendshapes_display_area and write all new elements
+                    with blendshapes_display_area.container():
+                        st.empty() # Clear previous content
+                        for element in blendshape_elements:
+                            if isinstance(element, str):
+                                st.markdown(element, unsafe_allow_html=True) # For labels and spacing
+                            else:
+                                # This handles the st.progress object itself.
+                                # Streamlit handles updates if it's the same object,
+                                # but recreating them in a container ensures proper layout per frame.
+                                pass # The progress bar is already handled by Streamlit.
+
+                        # The cleanest way: Recreate the entire content of the container
+                        # This avoids complex update logic for individual st.progress objects
+                        # within a tight loop.
+                        new_html_content = ""
+                        for shape in blendshapes_data:
+                            name = shape['name']
+                            score = shape['score']
+                            new_html_content += f"**{name}**: {score:.4f}<br>"
+                            # Use st.progress directly inside the loop's context manager,
+                            # but for a continuous update in an empty placeholder,
+                            # it's usually better to build up markdown string or re-render
+                            # the whole container.
+                            # For simple progress bars, a direct st.progress is easiest.
+                            
+                            # Let's simplify the blendshape display loop for clarity and directness.
+                            # The problem with st.progress in a loop like this is that it generates
+                            # a new widget on each iteration, which can cause performance issues or
+                            # unexpected behavior.
+                            # A better way is to prepare the markdown or a list of widgets to display.
+
+                        # Option A: Pure Markdown with custom bars (more control over look)
+                        blendshapes_html = "<div>"
+                        for shape in blendshapes_data:
+                            name = shape['name']
+                            score = shape['score']
+                            bar_width_percent = score * 100
+                            blendshapes_html += f"""
+                            <div style="display: flex; align-items: center; margin-bottom: 5px; font-family: sans-serif;">
+                                <span style="min-width: 150px; font-weight: bold; text-align: left;">{name}:</span>
+                                <div style="flex-grow: 1; height: 18px; background-color: #eee; border-radius: 3px; overflow: hidden; margin-right: 10px;">
+                                    <div style="width: {bar_width_percent}%; height: 100%; background-color: #4CAF50; text-align: right; color: white; line-height: 18px; font-size: 12px; padding-right: 5px; box-sizing: border-box; transition: width 0.1s ease-out;">
+                                        {score:.4f}
+                                    </div>
+                                </div>
+                                <span style="min-width: 50px; text-align: right;">{score:.4f}</span>
+                            </div>
+                            """
+                        blendshapes_html += "</div>"
+                        blendshapes_display_area.markdown(blendshapes_html, unsafe_allow_html=True)
+
+                        # Option B: Streamlit native widgets (most reliable for layout)
+                        # This requires rebuilding the components each time.
+                        # with blendshapes_display_area.container():
+                        #     st.empty() # Clear previous content in this container
+                        #     for shape in blendshapes_data:
+                        #         name = shape['name']
+                        #         score = shape['score']
+                        #         st.write(f"**{name}**: {score:.4f}")
+                        #         st.progress(score)
+                        #     # If you want numbers next to the bar, use st.columns
+                        #     # for shape in blendshapes_data:
+                        #     #     name = shape['name']
+                        #     #     score = shape['score']
+                        #     #     col_name, col_bar, col_score = st.columns([0.4, 0.5, 0.1])
+                        #     #     col_name.write(f"**{name}**")
+                        #     #     col_bar.progress(score)
+                        #     #     col_score.write(f"{score:.4f}")
+
+                else:
+                    blendshapes_display_area.info("No face blendshapes detected.")
+                # --- End Display Blendshapes ---
+            
             except queue.Empty:
                 # If no frame is in the queue, wait a very short time and try again
                 time.sleep(0.005) 
@@ -127,11 +219,12 @@ if mode == "Realtime":
                 # The st.empty() allows continuous updates within one Streamlit run.
                 # No st.rerun() here to avoid constant full script reruns, which would be inefficient.
             except Exception as e:
-                st.error(f"Error displaying frame: {e}")
+                st.error(f"Error displaying frame or blendshapes: {e}")
                 stop_producer() # Attempt to stop producer on display error
                 break # Exit the display loop on error
     else:
         live_feed_container.empty() # Ensure the video area is clear if not running
+        blendshapes_container.empty()
 
 elif mode == "Video":
     st.subheader("Video Analysis")
