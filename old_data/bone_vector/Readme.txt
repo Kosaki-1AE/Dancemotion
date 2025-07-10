@@ -1,6 +1,3 @@
-Thanks for the detailed info. The issue you're facing —
-`AssertionError: Torch not compiled with CUDA enabled` — means **your PyTorch installation doesn't support CUDA**, despite having GPUs available on the system.
-
 ---
 
 ### ✅ Let's fix it step-by-step **from the beginning** to successfully run the `.ipynb` notebook using GPU:
