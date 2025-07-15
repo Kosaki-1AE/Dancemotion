@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Re1sRwjs/JA=",
+  "dgSpecHash": "/IT0B/Hz7kY=",
   "success": true,
-  "projectFilePath": "D:\\GitHub\\Dancemotion\\realtime_withVR\\realtimeVR\\realtimeVR.csproj",
+  "projectFilePath": "D:\\Programs\\GitHub\\Dancemotion\\realtime_withVR\\realtimeVR\\realtimeVR.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\kos04\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\9.0.6\\microsoft.windowsdesktop.app.ref.9.0.6.nupkg.sha512",
     "C:\\Users\\kos04\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\9.0.6\\microsoft.aspnetcore.app.ref.9.0.6.nupkg.sha512"
