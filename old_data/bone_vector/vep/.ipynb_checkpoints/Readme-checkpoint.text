@@ -1,0 +1,8 @@
+#Activate env 
+#streamlit/venv/Scripts/activate
+
+#Run the program
+#streamlit run streamlit.py
+
+
+
