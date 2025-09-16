@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\kos04\\Documents\\GitHub\\Dancemotion\\realtime_withVR\\realtimeVR\\realtimeVR.csproj": {}
+    "\\\\wsl.localhost\\Ubuntu\\home\\kos04\\projects\\github\\Dancemotion\\realtime_withVR\\realtimeVR\\realtimeVR.csproj": {}
   },
   "projects": {
-    "C:\\Users\\kos04\\Documents\\GitHub\\Dancemotion\\realtime_withVR\\realtimeVR\\realtimeVR.csproj": {
+    "\\\\wsl.localhost\\Ubuntu\\home\\kos04\\projects\\github\\Dancemotion\\realtime_withVR\\realtimeVR\\realtimeVR.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\kos04\\Documents\\GitHub\\Dancemotion\\realtime_withVR\\realtimeVR\\realtimeVR.csproj",
+        "projectUniqueName": "\\\\wsl.localhost\\Ubuntu\\home\\kos04\\projects\\github\\Dancemotion\\realtime_withVR\\realtimeVR\\realtimeVR.csproj",
         "projectName": "realtimeVR",
-        "projectPath": "C:\\Users\\kos04\\Documents\\GitHub\\Dancemotion\\realtime_withVR\\realtimeVR\\realtimeVR.csproj",
+        "projectPath": "\\\\wsl.localhost\\Ubuntu\\home\\kos04\\projects\\github\\Dancemotion\\realtime_withVR\\realtimeVR\\realtimeVR.csproj",
         "packagesPath": "C:\\Users\\kos04\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\kos04\\Documents\\GitHub\\Dancemotion\\realtime_withVR\\realtimeVR\\obj\\",
+        "outputPath": "\\\\wsl.localhost\\Ubuntu\\home\\kos04\\projects\\github\\Dancemotion\\realtime_withVR\\realtimeVR\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -44,7 +44,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.200"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net9.0": {
@@ -60,22 +60,12 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "downloadDependencies": [
-            {
-              "name": "Microsoft.AspNetCore.App.Ref",
-              "version": "[9.0.6, 9.0.6]"
-            },
-            {
-              "name": "Microsoft.WindowsDesktop.App.Ref",
-              "version": "[9.0.6, 9.0.6]"
-            }
-          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.205/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

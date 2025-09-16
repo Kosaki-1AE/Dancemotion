@@ -1,7 +1,7 @@
 
-# 🎵 Improvisation AI - ImprovFormer
+# Dance improvisation AI
 
-このプロジェクトは、**即興性（Improvisation）** と **空気感（Stillness）** を扱う AI モデル「ImprovFormer」の実装と、ダンスデータセット AIST++ を用いた空気感推論・可視化を目的としています。
+このプロジェクトは、**即興性（Improvisation）** と **空気感(静動(Stillness in Motion))** を扱う AI モデル「ImprovFormer」の実装と、ダンスデータセット AIST++ を用いた空気感推論・可視化を目的として制作した。
 
 ---
 
@@ -9,6 +9,7 @@
 
 ```
 improvisation/
+├── README.md/                   # 今読んでるここのこと
 ├── aistdata++/                  # AIST++拡張データ処理モジュール
 ├── aist_json_sample/            # stillness/meaning付きJSONデータ
 ├── data/                        # responsibilityなどのスコアCSV
@@ -17,15 +18,25 @@ improvisation/
 │   └── improvformer_model.pth   # 学習済みモデル重み
 ├── plots/
 │   └── responsibility_score_plot.png
-├── scripts/
+├── base_scripts/
+│   ├── acts_core.py             # 活性化関数のレジストリ（正/負ペアをここで自動生成）
+│   ├── anaylze.py               # 責任出力の集計・意思決定（実数版 & 表裏の表現手法としての複素版）
+│   ├── complex_ops.py           # 複素責任ベクトルの生成/線形/活性/分解ユーティリティ
+│   ├── contrib.py               # 正/負の出力を「効いた分」と「強さ」に分ける分解ロジック
+│   ├── demo.py                  # 一連のデモ（活性ペアの比較出力＋Flowの挙動ログ）
+│   ├── flow.py                  # Hashベースの方向づけ＋学習、イベント判定の“流れ”実装（実数/複素の両方）
+│   ├── fluct.py                 # 心理的ゆらぎ（確率のノイズ化/閾値の揺らぎなど）
+│   ├── init.py                  # 外部公開する最小インターフェイスをまとめて export
+│   └── linops.py                # 線形変換（xW + b）の最小ユーティリティ
+├── train_scripts/
 │   ├── improvformer.py          # モデル定義
 │   ├── train.py                 # 学習スクリプト
-│   ├── predict_improvformer.py # 推論スクリプト
-│   ├── infference_dummy.py     # ダミーデータ推論
-│   ├── decision_engine.py      # Ψ-selector（決定エンジン）
-│   ├── replay_buffer.py        # 履歴Stillness用バッファ
-│   ├── action_features.py      # 空気感特徴抽出
-│   └── utils.py, loader.py     # ユーティリティ
+│   ├── predict_improvformer.py  # 推論スクリプト
+│   ├── infference_dummy.py      # ダミーデータ推論
+│   ├── decision_engine.py       # Ψ-selector（決定エンジン）
+│   ├── replay_buffer.py         # 履歴Stillness用バッファ
+│   ├── action_features.py       # 空気感特徴抽出
+│   └── utils.py, loader.py      # ユーティリティ
 ```
 
 ---
@@ -74,9 +85,12 @@ python scripts/decision_engine.py
 
 ---
 
-## ✨ 研究背景（ワイ理論・Stillness AI）
+## ✨ 研究背景（Stillness AI）
 
-本プロジェクトは、ワイ理論における「Stillness（未確定のゆらぎ）」と「責任の矢（意思形成）」の概念を、Transformer系モデルに組み込んだAI構築を目指しています。
+本プロジェクトは、著者自身のセルフフィードバックに基づく理論における「Stillness（未確定のゆらぎ）」と「責任の矢/責任ベクトル（意思形成）」の概念を、Transformer系モデルに組み込んだAI構築を目指すものである。
 
 ---
 
+## 👥Author
+
+Kosuke Sasaki
