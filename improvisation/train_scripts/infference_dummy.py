@@ -1,10 +1,10 @@
 import numpy as np
 import torch
-from scripts.aist_loader import load_dataset_from_folder
-from scripts.convert_action import convert_to_csv
-from scripts.decision_engine import is_will_activated
-from scripts.improvisation_dance import StillnessAI
-from scripts.replay_buffer import ReplayBuffer
+from train_scripts.aist_loader import load_dataset_from_folder
+from train_scripts.convert_action import convert_to_csv
+from train_scripts.decision_engine import is_will_activated
+from train_scripts.improvisation_dance import StillnessAI
+from train_scripts.replay_buffer import ReplayBuffer
 
 # モデル初期化（例: 17 keypoints × 3D = 51次元）
 dim = 51

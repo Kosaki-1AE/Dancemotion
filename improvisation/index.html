@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>AirSense — PhoneCam × Stillness in Motion × Git</title>
+
+<style>
+  body{margin:0;font-family:ui-sans-serif,system-ui,"Noto Sans JP",sans-serif;background:#0b1020;color:#eaf2ff}
+  header{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#111834;position:sticky;top:0}
+  h1{font-size:16px;margin:0}
+  button, input, select{font-size:14px}
+  .wrap{display:grid;gap:12px;padding:12px}
+  .panel{background:#111834;border:1px solid #1c254b;border-radius:14px;padding:12px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  video,canvas{width:100%;max-width:520px;border-radius:12px;background:#000}
+  .score{font-size:28px;font-weight:700}
+  details{color:#b7c6ff}
+  label{display:flex;flex-direction:column;font-size:12px;gap:6px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .ok{color:#7dffa2}.warn{color:#ffd480}
+  .muted{opacity:.7}
+</style>
+
+<!-- TensorFlow.js / Pose Detection (MoveNet) -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.20.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.0.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404"></script>
+
+<!-- isomorphic-git + lightning-fs（ブラウザ内Git） -->
+<script src="https://cdn.jsdelivr.net/npm/isomorphic-git@1.25.7/index.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/isomorphic-git/http/web/index.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lightning-fs@4.1.1/lightning-fs.min.js"></script>
+</head>
+<body>
+<header>
+  <h1>AirSense (PhoneCam → Stillness-in-Motion → Git)</h1>
+  <details>
+    <summary>⚙︎ Settings</summary>
+    <div class="panel" style="margin-top:10px;min-width:280px">
+      <div class="grid2">
+        <label>Repo URL (https)
+          <input id="repoUrl" placeholder="https://github.com/you/repo.git">
+        </label>
+        <label>Author Name
+          <input id="authorName" placeholder="Your Name">
+        </label>
+        <label>Author Email
+          <input id="authorEmail" placeholder="you@example.com">
+        </label>
+        <label>Token (PAT)
+          <input id="token" placeholder="ghp_...">
+        </label>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button id="btnInit">Init / Set Remote</button>
+        <button id="btnCommitPush">Commit & Push</button>
+      </div>
+      <small>※Tokenはブラウザ内だけで使用。ページを閉じると消えます。</small>
+    </div>
+  </details>
+</header>
+
+<div class="wrap">
+  <div class="panel">
+    <div class="row">
+      <button id="btnStart">Start</button>
+      <button id="btnStop">Stop</button>
+      <button id="btnSave">Save snapshot</button>
+      <span>Backend: <code id="backend">-</code></span>
+    </div>
+    <div class="row">
+      <video id="video" playsinline muted></video>
+      <canvas id="canvas"></canvas>
+    </div>
+    <div class="row">
+      <div>SIM Score: <span class="score" id="simScore">-</span></div>
+      <div>Commit-ready: <span id="commitState" class="warn">no</span></div>
+      <!-- ▼ v-JEPA 可視化を追加 -->
+      <div class="muted">|</div>
+      <label style="flex-direction:row;align-items:center;gap:8px">
+        <input id="vjToggle" type="checkbox" />
+        Send to v-JEPA
+      </label>
+      <div>v-JEPA: <span id="vjScore">-</span> <small class="muted">(<span id="vjLatency">-</span> ms)</small></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="row">
+      <div>Window(s): <input id="winSec" type="number" value="1.5" step="0.1" style="width:70px"> |
+        EMA: <input id="ema" type="number" value="0.25" step="0.05" style="width:70px">
+      </div>
+    </div>
+    <pre id="log" style="white-space:pre-wrap;font-size:12px;max-height:180px;overflow:auto"></pre>
+  </div>
+</div>
+
+<script>
+/* ========== Camera & Pose ========== */
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const simScoreEl = document.getElementById('simScore');
+const commitEl = document.getElementById('commitState');
+const logEl = document.getElementById('log');
+const backendEl = document.getElementById('backend');
+
+const vjToggle = document.getElementById('vjToggle');
+const vjScoreEl = document.getElementById('vjScore');
+const vjLatencyEl = document.getElementById('vjLatency');
+
+let detector, running=false, rafId=null;
+let prevKeypoints=null, lastTs=performance.now();
+let emaAlpha = 0.25, simEMA=null;
+let scoreBuffer=[];
+let logRows=[];
+
+/* === サーバ通信ユーティリティ === */
+async function postJSON(path, payload){
+  try{
+    await fetch(path, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(payload) });
+  }catch(e){ /* ignore */ }
+}
+
+/* === 送信用に縮小したフレームをJPEG化 === */
+async function captureDownscaledJPEG(maxShort=256, quality=0.65){
+  const w = canvas.width, h = canvas.height;
+  // 短辺が maxShort になるように縮小
+  const scale = Math.min(1, maxShort / Math.min(w,h));
+  const dw = Math.round(w * scale), dh = Math.round(h * scale);
+  const off = document.createElement('canvas');
+  off.width = dw; off.height = dh;
+  off.getContext('2d').drawImage(canvas, 0, 0, dw, dh);
+  return await new Promise(res => off.toBlob(res, 'image/jpeg', quality));
+}
+
+/* === v-JEPAへ1枚送ってレスポンスを受け取る === */
+let vjInFlight = false;
+async function sendFrameForVJEPA(){
+  if (!vjToggle.checked || !running || vjInFlight) return;
+  vjInFlight = true;
+  try{
+    const blob = await captureDownscaledJPEG(256, 0.65);
+    const t0 = performance.now();
+    const resp = await fetch('/analyze', { method:'POST', body: blob });
+    const t1 = performance.now();
+    const js = await resp.json().catch(()=>({ok:false}));
+    if(js && js.ok && js.vjepa){
+      vjScoreEl.textContent = (js.vjepa.score ?? js.vjepa.sim ?? 0).toFixed(3);
+      vjLatencyEl.textContent = Math.round(t1 - t0);
+      // ついでに title に埋め込んでおく（詳細見たい時用）
+      commitEl.title = `vJEPA: ${JSON.stringify(js.vjepa)}`;
+    }else{
+      vjScoreEl.textContent = 'err';
+      vjLatencyEl.textContent = '-';
+    }
+  }catch(e){
+    vjScoreEl.textContent = 'err';
+    vjLatencyEl.textContent = '-';
+  }finally{
+    vjInFlight = false;
+  }
+}
+
+/* === カメラ & Pose === */
+async function setupCamera() {
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: "environment", width: {ideal: 640}, height: {ideal: 480}},
+    audio: false
+  });
+  video.srcObject = stream;
+  await video.play();
+  canvas.width = video.videoWidth || 640;
+  canvas.height = video.videoHeight || 480;
+}
+
+async function setupPose() {
+  await tf.setBackend('webgl');
+  await tf.ready();
+  backendEl.textContent = tf.getBackend();
+  detector = await poseDetection.createDetector(
+    poseDetection.SupportedModels.MoveNet,
+    { modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER }
+  );
+}
+
+function l2(a,b){ const dx=a.x-b.x, dy=a.y-b.y; return Math.hypot(dx,dy); }
+
+function computeSimScore(kps, dtSec){
+  if(!prevKeypoints || dtSec<=0) return 0.0;
+  let v=0, n=0;
+  const diag = Math.hypot(canvas.width, canvas.height);
+  for(let i=0;i<kps.length;i++){
+    if(kps[i].score<0.3 || prevKeypoints[i].score<0.3) continue;
+    const p = {x:kps[i].x, y:kps[i].y};
+    const q = {x:prevKeypoints[i].x, y:prevKeypoints[i].y};
+    v += l2(p,q) / diag / dtSec;
+    n++;
+  }
+  if(n===0) return 0.0;
+  const avgV = v/n;
+  const c=8.0;
+  let sim = 1.0 / (1.0 + c*avgV);
+  const conf = kps.reduce((s,k)=>s+k.score,0)/kps.length;
+  sim *= Math.min(1, Math.max(0, conf));
+  return sim;
+}
+
+function updateEma(x){
+  if(simEMA==null) simEMA = x;
+  simEMA = (1-emaAlpha)*simEMA + emaAlpha*x;
+  return simEMA;
+}
+
+function drawFrame(image, kps){
+  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#7dffa2";
+  for(const k of kps){
+    if(k.score<0.3) continue;
+    ctx.beginPath();
+    ctx.arc(k.x, k.y, 3, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+async function loop(){
+  if(!running) return;
+  const now = performance.now();
+  const dtSec = (now - lastTs)/1000;
+  lastTs = now;
+
+  const poses = await detector.estimatePoses(video);
+  const kps = poses[0]?.keypoints?.map(k=>({x:k.x,y:k.y,score:k.score})) || [];
+  drawFrame(video, kps);
+
+  let sim = computeSimScore(kps, dtSec);
+  emaAlpha = parseFloat(document.getElementById('ema').value || "0.25");
+  const simSmoothed = updateEma(sim);
+
+  const winSec = parseFloat(document.getElementById('winSec').value || "1.5");
+  scoreBuffer.push({t:now, v:simSmoothed});
+  while(scoreBuffer.length && (now - scoreBuffer[0].t) > winSec*1000) scoreBuffer.shift();
+  const meanWin = scoreBuffer.reduce((s,a)=>s+a.v,0) / Math.max(1, scoreBuffer.length);
+
+  simScoreEl.textContent = meanWin.toFixed(3);
+  const committed = meanWin >= 0.72;
+  commitEl.textContent = committed ? "yes" : "no";
+  commitEl.className = committed ? "ok" : "warn";
+
+  /* 1秒ごとに /event */
+  window.__lastSent = window.__lastSent || 0;
+  if (now - window.__lastSent > 1000) {
+    postJSON("/event", {
+      ts: new Date().toISOString(),
+      sim_mean: Number(meanWin.toFixed(6)),
+      committed: committed,
+      ema: emaAlpha,
+      window_s: winSec
+    });
+    window.__lastSent = now;
+  }
+
+  /* v-JEPA送信（0.8秒間隔） */
+  window.__lastVj = window.__lastVj || 0;
+  if (vjToggle.checked && (now - window.__lastVj > 800)) {
+    sendFrameForVJEPA();
+    window.__lastVj = now;
+  }
+
+  prevKeypoints = kps;
+  rafId = requestAnimationFrame(loop);
+}
+
+/* ========== Buttons ========== */
+document.getElementById('btnStart').onclick = async ()=>{
+  if(running) return;
+  await setupCamera();
+  await setupPose();
+  running=true; lastTs=performance.now(); loop();
+};
+document.getElementById('btnStop').onclick = ()=>{
+  running=false; if(rafId) cancelAnimationFrame(rafId);
+};
+document.getElementById('btnSave').onclick = ()=>{
+  const row = {
+    ts: new Date().toISOString(),
+    sim_mean: parseFloat(simScoreEl.textContent || "0"),
+    window_s: parseFloat(document.getElementById('winSec').value||"1.5"),
+    ema: parseFloat(document.getElementById('ema').value||"0.25")
+  };
+  logRows.push(row);
+  logEl.textContent = JSON.stringify(row) + "\n" + logEl.textContent;
+  postJSON("/snapshot", row);
+};
+
+/* ========== Git (isomorphic-git) ========== */
+const {git} = window;
+const http = window.HttpWeb;
+const FS = window.LightningFS;
+const fs = new FS('airfs');
+const pfs = fs.promises;
+const dir = '/repo';
+
+async function ensureRepo(){
+  try { await pfs.stat(dir); } catch { await pfs.mkdir(dir); await git.init({fs, dir}); }
+}
+document.getElementById('btnInit').onclick = async ()=>{
+  const repoUrl = document.getElementById('repoUrl').value.trim();
+  await ensureRepo();
+  if(repoUrl){
+    await git.addRemote({fs, dir, remote:'origin', url:repoUrl}).catch(async()=>{
+      await git.removeRemote({fs, dir, remote:'origin'}).catch(()=>{});
+      await git.addRemote({fs, dir, remote:'origin', url:repoUrl});
+    });
+  }
+  await pfs.mkdir(`${dir}/.airsense`).catch(()=>{});
+  await pfs.writeFile(`${dir}/.airsense/README.md`,
+`# AirSense
+Local phone camera → Stillness in Motion → Git
+`, 'utf8');
+  await pfs.writeFile(`${dir}/log.json`, '[]', 'utf8').catch(()=>{});
+  await git.add({fs, dir, filepath:'.airsense/README.md'});
+  await git.add({fs, dir, filepath:'log.json'});
+  const name = document.getElementById('authorName').value || 'AirSense';
+  const email = document.getElementById('authorEmail').value || 'airsense@example.com';
+  await git.commit({fs, dir, author:{name,email}, message:'init AirSense'});
+  alert('Repo initialized / remote set.');
+};
+
+document.getElementById('btnCommitPush').onclick = async ()=>{
+  await ensureRepo();
+  let oldLog = [];
+  try { oldLog = JSON.parse(await pfs.readFile(`${dir}/log.json`, 'utf8')); } catch {}
+  const newLog = [...oldLog, ...logRows];
+  await pfs.writeFile(`${dir}/log.json`, JSON.stringify(newLog, null, 2), 'utf8');
+  await git.add({fs, dir, filepath:'log.json'});
+
+  const name = document.getElementById('authorName').value || 'AirSense';
+  const email = document.getElementById('authorEmail').value || 'airsense@example.com';
+  await git.commit({fs, dir, author:{name,email}, message:`add ${logRows.length} snapshot(s)`});
+  logRows = [];
+
+  const token = document.getElementById('token').value.trim();
+  const onAuth = () => ({username: token ? 'token' : '', password: token});
+  try{
+    await git.push({fs, http, dir, remote:'origin', onAuth});
+    alert('Pushed to origin ✅');
+  }catch(e){
+    console.error(e);
+    alert('Push failed. Repo URL/Tokenを見直してね。');
+  }
+};
+</script>
+</body>
+</html>

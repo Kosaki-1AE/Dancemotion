@@ -3,7 +3,7 @@ import pickle
 
 import numpy as np
 import torch
-from scripts.improvformer import ImprovFormer  # モデル定義ファイル
+from train_scripts.improvformer import ImprovFormer  # モデル定義ファイル
 
 # ====== 設定 ======
 input_dim = 51
