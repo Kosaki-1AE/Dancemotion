@@ -14,7 +14,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-# lib/
+lib/
 lib64/
 parts/
 sdist/
@@ -26,8 +26,6 @@ wheels/
 MANIFEST
 
 # PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
 
@@ -51,16 +49,16 @@ coverage.xml
 *.mo
 *.pot
 
-# Django stuff:
+# Django stuff
 *.log
 local_settings.py
 db.sqlite3
 
-# Flask stuff:
+# Flask stuff
 instance/
 .webassets-cache
 
-# Scrapy stuff:
+# Scrapy stuff
 .scrapy
 
 # Sphinx documentation
@@ -103,6 +101,20 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+# ---- Custom for this project ----
+# Training / dataset artifacts
 data/
+datasets/
+logs/
+checkpoints/
+results/
+runs/
 
+# Model weights (V-JEPA / custom)
+weights/
+*.pt
+*.pth
+*.ckpt
+
+# macOS
 .DS_Store
