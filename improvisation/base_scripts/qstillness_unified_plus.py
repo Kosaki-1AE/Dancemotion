@@ -18,7 +18,7 @@ from qiskit.quantum_info import Statevector
 
 # === ここ重要: ユーザー提供の根源モジュールを使う ===
 # （無ければ ImportError を出して気づけるように素直に失敗させる）
-from ResponsibilityAllow_acts import (  # activations; core analysis
+from .ResponsibilityAllow_acts import (  # activations; core analysis
     analyze_activation, apply_psych_fluctuation, gelu, leaky_relu, neg_gelu,
     neg_leaky_relu, neg_relu, neg_sigmoid, neg_silu, relu, sigmoid, silu, tanh)
 
