@@ -1,10 +1,12 @@
 # responsibility_allow/analyze.py
+
+from typing import Callable, Dict, List, Optional
+
 import numpy as np
-from typing import Callable, Dict, Optional, List
-from linops import linear_transform
+from complex_ops import split_real_imag
 from contrib import split_contrib
 from fluct import apply_psych_fluctuation
-from complex_ops import split_real_imag
+from linops import linear_transform
 
 Act = Callable[[np.ndarray], np.ndarray]
 
@@ -19,6 +21,7 @@ def analyze_activation_complex(
     fluct_mode: str = "none",
     fluct_kwargs: Optional[Dict] = None,
     center: str | float = "auto",
+    contrib_mode: str = "separate",  # ← 追加: "separate" or "strength"
     verbose: bool = False,
 ) -> Dict:
     if fluct_kwargs is None:
@@ -31,7 +34,9 @@ def analyze_activation_complex(
     # 実部で従来通りの処理
     out_pos = pos_fn(z_real)
     out_neg = neg_fn(z_real)
-    pos_part, neg_strength = split_contrib(out_pos, out_neg, center=center)
+
+    # ← ここが変更点：解釈モードを渡す
+    pos_part, neg_strength = split_contrib(out_pos, out_neg, center=center, mode=contrib_mode)
 
     pos_sum = float(pos_part.sum())
     neg_sum = float(neg_strength.sum())
@@ -71,6 +76,7 @@ def will_event_complex(
     fluct_mode: str = "logit_gauss",
     fluct_kwargs: Optional[Dict] = None,
     center: str | float = "auto",
+    contrib_mode: str = "separate",  # ← 追加
 ) -> Dict:
     res = analyze_activation_complex(
         x, W, b, pos_fn, neg_fn,
@@ -78,6 +84,7 @@ def will_event_complex(
         fluct_mode=fluct_mode,
         fluct_kwargs=fluct_kwargs or {},
         center=center,
+        contrib_mode=contrib_mode,  # ← 追加
         verbose=False,
     )
     polarity  = 1 if res["pos_sum"] >= res["neg_sum"] else -1
@@ -91,7 +98,6 @@ def will_event_complex(
         "intensity": float(intensity),
         "detail": res,   # res["hidden"] に虚部が入る
     }
-# === 追記ここまで ===
 
 def analyze_activation(
     x: np.ndarray,
@@ -105,6 +111,7 @@ def analyze_activation(
     fluct_mode: str = "none",
     fluct_kwargs: Optional[Dict] = None,
     center: str | float = "auto",
+    contrib_mode: str = "separate",  # ← 追加
     name_pos: Optional[str] = None,
     name_neg: Optional[str] = None,
     verbose: bool = False,
@@ -116,7 +123,8 @@ def analyze_activation(
     out_pos = pos_fn(z)
     out_neg = neg_fn(z)
 
-    pos_part, neg_strength = split_contrib(out_pos, out_neg, center=center)
+    # ← ここが変更点
+    pos_part, neg_strength = split_contrib(out_pos, out_neg, center=center, mode=contrib_mode)
 
     pos_sum = float(pos_part.sum())
     neg_sum = float(neg_strength.sum())
@@ -127,12 +135,13 @@ def analyze_activation(
 
     highlights: List[Dict] = []
     if topk:
-        strength = pos_part + neg_strength
+        # mode="separate" でも "strength" でも「強いほう」を拾えるよう対称な指標を使用
+        strength = np.abs(pos_part) + np.abs(neg_strength)
         idx = np.argsort(-strength)[:topk]
         for i in idx:
-            p, n = pos_part[i], neg_strength[i]
+            p, n = float(pos_part[i]), float(neg_strength[i])
             verdict = "愛が強い" if p > n else ("えぐみが強い" if p < n else "拮抗")
-            highlights.append({"idx": int(i), "pos": float(p), "neg": float(n), "verdict": verdict})
+            highlights.append({"idx": int(i), "pos": p, "neg": n, "verdict": verdict})
 
     if verbose:
         print(f"\n=== {name_pos or 'Pos'} & {name_neg or 'Neg'} ===")
@@ -165,6 +174,7 @@ def will_event(
     fluct_mode: str = "logit_gauss",
     fluct_kwargs: Optional[Dict] = None,
     center: str | float = "auto",
+    contrib_mode: str = "separate",  # ← 追加
 ) -> Dict:
     res = analyze_activation(
         x, W, b, pos_fn, neg_fn,
@@ -173,6 +183,7 @@ def will_event(
         fluct_mode=fluct_mode,
         fluct_kwargs=fluct_kwargs or {},
         center=center,
+        contrib_mode=contrib_mode,  # ← 追加
         name_pos=getattr(pos_fn, "__name__", "pos"),
         name_neg=getattr(neg_fn, "__name__", "neg"),
         verbose=False,
@@ -180,5 +191,11 @@ def will_event(
     polarity = 1 if res["pos_sum"] >= res["neg_sum"] else -1
     intensity = abs(res["delta"])
     commit = bool(res["p_hat"] >= theta)
-    return {"commit": commit, "p_hat": float(res["p_hat"]), "theta": float(theta),
-            "polarity": polarity, "intensity": float(intensity), "detail": res}
+    return {
+        "commit": commit,
+        "p_hat": float(res["p_hat"]),
+        "theta": float(theta),
+        "polarity": polarity,
+        "intensity": float(intensity),
+        "detail": res,
+    }

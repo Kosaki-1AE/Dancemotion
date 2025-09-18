@@ -1,6 +1,8 @@
-# responsibility_allow/fluct.py
+# responsibility_allow/fluct.py　心理的ゆらぎを加えるとこぉろ
+from typing import Optional, Tuple
+
 import numpy as np
-from typing import Tuple, Optional
+
 
 def apply_psych_fluctuation(
     p_pos: float,

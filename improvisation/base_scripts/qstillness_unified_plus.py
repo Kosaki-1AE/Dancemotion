@@ -1,10 +1,10 @@
 # qstillness_unified_plus.py
 # ------------------------------------------------------------
-# 1ファイル統合: QuantumStillnessEngine + 責任→量子ブリッジ
-# 依存: numpy, qiskit, ResponsibilityAllow_acts.py（同ディレクトリ）
+# QuantumStillnessEngine + 責任→量子ブリッジ (+ 特異点処理オプション)
+# 依存: numpy, qiskit, acts_core.py, fluctu.py, singular_module.py（同一パッケージ）
 # 使い方:
-#   python qstillness_unified_plus.py
 #   from qstillness_unified_plus import QuantumStillnessEngine, run_responsibility_quantum_loop
+#   out = run_responsibility_quantum_loop(use_singularity=True, sing_delta={"mode":"create"})
 # ------------------------------------------------------------
 from __future__ import annotations
 
@@ -16,13 +16,13 @@ import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Statevector
 
-# === ここ重要: ユーザー提供の根源モジュールを使う ===
-# （無ければ ImportError を出して気づけるように素直に失敗させる）
-from .ResponsibilityAllow_acts import (  # activations; core analysis
-    analyze_activation, apply_psych_fluctuation, gelu, leaky_relu, neg_gelu,
-    neg_leaky_relu, neg_relu, neg_sigmoid, neg_silu, relu, sigmoid, silu, tanh)
-
-# ↑ ユーザーのオリジナル実装をそのまま呼ぶ。:contentReference[oaicite:1]{index=1}
+# === ユーザー提供モジュール ===
+from .acts_core import (analyze_activation, gelu, leaky_relu,  # type: ignore
+                        neg_gelu, neg_leaky_relu, neg_relu, neg_sigmoid,
+                        neg_silu, relu, sigmoid, silu, tanh)
+from .fluct import \
+    apply_psych_fluctuation  # noqa: F401  (使う側で活用可能)  # type: ignore
+from .singular_module import SingularCalculator  # type: ignore
 
 
 # ========== 1) 量子エンジン ==========
@@ -60,10 +60,6 @@ class QuantumStillnessEngine:
     """
     q0: Agent (|0>=Stillness, |1>=Motion)
     q1: Ancilla (Lightning trigger)
-    公開API: reset / set_state / get_state /
-             _apply_small_stillness / _arrow_rotation /
-             _lightning_pulse / _sound_return_mix / _prob_motion /
-             _step / run
     """
     def __init__(self, params: Optional[SimParams] = None):
         self.params = params or SimParams()
@@ -74,7 +70,7 @@ class QuantumStillnessEngine:
         self._sv = self._init_state()
 
     def _init_state(self) -> Statevector:
-        return Statevector.from_label('00')  # |q1 q0> の順（little-endian）
+        return Statevector.from_label('00')  # |q1 q0>
 
     def reset(self):
         self.log = Log()
@@ -144,7 +140,8 @@ class QuantumStillnessEngine:
 
         # 閾値超で稲妻
         if s.tension >= p.tension_threshold:
-            bias_noise = float(np.clip(np.random.normal(0.0, p.jitter_std), -0.5, 0.5))
+            bias_noise = float(np.random.normal(0.0, p.jitter_std))
+            bias_noise = float(np.clip(bias_noise, -0.5, 0.5))
             bias = float(np.clip(1.0 - bias_noise, 0.0, 1.0))
             self._lightning_pulse(bias)
             self.log.events.append(f"[t={t}] LIGHTNING (bias={bias:.2f})")
@@ -173,117 +170,6 @@ class QuantumStillnessEngine:
             self._step(t)
         return self.log
 
-# ====== 追記: 多モーダル駆動ランナー ======
-def run_multimodal_session(
-    T: int,
-    acts_mode: str = "relu",
-    seed: Optional[int] = 7,
-    fluct_mode: str = "logit_gauss",
-    fluct_kwargs: Optional[Dict] = None,
-    x0: Optional[np.ndarray] = None, W: Optional[np.ndarray] = None, b: Optional[np.ndarray] = None,
-    params: Optional[SimParams] = None,
-    *,
-    media_series: Optional[Dict[str, np.ndarray]] = None,
-    alpha_audio_tension: Tuple[float,float] = (0.15, 0.10),  # (onset, loud)
-    audio_onset_gate: float = 0.6,
-    beta_motion_delta: float = 0.8,      # 動き→delta 係数
-    beta_motion_mix: float = 0.25,       # 動き→mix 係数
-    expose_events: bool = False
-) -> Dict:
-    """
-    media_series は qstillness_io_media.align_media_to_T() の出力を想定:
-      - beat_flag, onset_strength, loudness, motion_mag （長さTの配列）
-    """
-    if seed is not None:
-        np.random.seed(seed)
-    if fluct_kwargs is None:
-        fluct_kwargs = {"sigma": 0.35, "seed": None}
-    if acts_mode not in _ACTS_TABLE:
-        raise ValueError(f"unknown acts_mode: {acts_mode}")
-    pos_fn, neg_fn, center = _ACTS_TABLE[acts_mode]
-
-    # 既定特徴
-    x = x0 if x0 is not None else np.array([1.0, -0.5, 0.8, 0.2])
-    W = W  if W  is not None else np.array([
-        [ 0.6, -0.2, 0.3, -0.5],
-        [ 0.1,  0.4, -0.7, 0.2],
-        [-0.3,  0.2, 0.5,  0.1],
-        [ 0.7, -0.6, 0.2,  0.4]
-    ])
-    b = b  if b  is not None else np.array([0.05, -0.1, 0.2, 0.0])
-
-    eng = QuantumStillnessEngine(params or SimParams(T=T, tension_threshold=1.0, jitter_std=0.05))
-    timeline = {"p_motion": [], "delta": [], "p_hat": [], "label": [],
-                "mix": [], "angle": [], "bias": []}
-    lightning_count = 0
-
-    # メディア系列
-    beat = media_series["beat_flag"] if (media_series and "beat_flag" in media_series) else np.zeros(T, np.float32)
-    onset = media_series["onset_strength"] if (media_series and "onset_strength" in media_series) else np.zeros(T, np.float32)
-    loud  = media_series["loudness"] if (media_series and "loudness" in media_series) else np.zeros(T, np.float32)
-    motion= media_series["motion_mag"] if (media_series and "motion_mag" in media_series) else np.zeros(T, np.float32)
-
-    for t in range(T):
-        # --- 音で外界フラグ＆緊張をドライブ ---
-        # ビート or 強オンセットで external_input=1
-        eng.side.external_input = 1 if (beat[t] > 0.5 or onset[t] > audio_onset_gate) else 0
-        # 緊張に音の強度を足す
-        eng.side.tension += alpha_audio_tension[0]*float(onset[t]) + alpha_audio_tension[1]*float(loud[t])
-
-        # --- 既存の“責任”分析 ---
-        if t > 0:
-            x = next_features(x, noise=0.12)
-        ana = analyze_activation(
-            x=x, W=W, b=b, pos_fn=pos_fn, neg_fn=neg_fn,
-            name_pos="Pos", name_neg="Neg",
-            tau=1.0, topk=None,
-            fluct_mode=fluct_mode, fluct_kwargs=fluct_kwargs,
-            center=center, verbose=False
-        )
-        delta = ana["delta"]; p_hat = ana["p_hat"]; label = ana["label"]
-        pos_part, neg_strength = ana["pos_part"], ana["neg_strength"]
-
-        # --- 映像の“動き”で delta と mix をブースト ---
-        motion_z = np.tanh( (float(motion[t]) - 0.5) * 2.0 )  # [-1,1] に再圧縮
-        delta = delta + beta_motion_delta * motion_z
-        mix_extra = np.clip(beta_motion_mix * abs(motion_z), 0.0, 1.0)
-
-        # --- 矢（Ry角） ---
-        angle = delta_to_angle(delta, k_theta=0.9)
-        qc = QuantumCircuit(2); qc.ry(angle, 0)
-        eng._sv = eng._sv.evolve(qc)
-
-        # --- 稲妻（内部のみ） or 音の帰還ミックス ---
-        if label == 1:
-            bias = prob_to_bias(p_hat)
-            eng._lightning_pulse(bias)
-            if expose_events:
-                eng.log.events.append(f"[t={t}] LIGHTNING(by media) bias={bias:.2f}")
-            lightning_count += 1
-            eng.side.tension = 0.0
-            eng.side.fear    = min(1.0, eng.side.fear + 0.4)
-            eng.side.wonder  = min(1.0, eng.side.wonder + 0.2)
-            eng.side.external_input = 1
-            eng.side.sound_timer = max(eng.side.sound_timer, eng.params.sound_hold_steps)
-        else:
-            mix = strength_to_mix(pos_part, neg_strength, k_m=0.12)
-            eng._sound_return_mix(np.clip(mix + mix_extra, 0.0, 1.0))
-
-        # --- 1ステップ進行 & ログ ---
-        eng._step(t)
-        timeline["p_motion"].append(eng._prob_motion())
-        timeline["delta"].append(float(delta))
-        timeline["p_hat"].append(float(p_hat))
-        timeline["label"].append(int(label))
-        timeline["mix"].append(float(strength_to_mix(pos_part, neg_strength)))
-        timeline["angle"].append(float(angle))
-        timeline["bias"].append(float(prob_to_bias(p_hat)) if label == 1 else 0.0)
-
-    mean_p_motion = float(np.mean(timeline["p_motion"]))
-    return {"timeline": timeline, "engine_log": eng.log,
-            "lightning_count": lightning_count,
-            "mean_p_motion": mean_p_motion,
-            "params": eng.params}
 
 # ========== 2) マッピング（責任→量子） ==========
 def delta_to_angle(delta: float, k_theta: float = 0.9) -> float:
@@ -317,17 +203,81 @@ _ACTS_TABLE = {
     # tanhは奇関数なのでneg_tanh==tanh。必要なら追加してOK。
 }
 
+
+def _build_singularity_instances(
+    use_singularity: bool,
+    sing_delta: Optional[dict],
+    sing_p_hat: Optional[dict],
+    sing_bias: Optional[dict],
+    sing_mix: Optional[dict],
+) -> Tuple[Optional[SingularCalculator], Optional[SingularCalculator], Optional[SingularCalculator], Optional[SingularCalculator]]:
+    if not use_singularity:
+        return None, None, None, None
+    # デフォルト埋め
+    if sing_delta is None: sing_delta = {"mode": "both", "epsilon": 1e-6}
+    if sing_p_hat is None: sing_p_hat = {"mode": "both", "epsilon": 1e-6}
+    if sing_bias  is None: sing_bias  = {"mode": "both", "epsilon": 1e-6}
+    if sing_mix   is None: sing_mix   = {"mode": "both", "epsilon": 1e-6}
+    return (
+        SingularCalculator(**sing_delta),
+        SingularCalculator(**sing_p_hat),
+        SingularCalculator(**sing_bias),
+        SingularCalculator(**sing_mix),
+    )
+
+
+def _apply_singularity_all(delta: float, p_hat: float, bias: float, mix: float,
+                           sc_delta: Optional[SingularCalculator],
+                           sc_p: Optional[SingularCalculator],
+                           sc_b: Optional[SingularCalculator],
+                           sc_m: Optional[SingularCalculator]) -> Tuple[float, float, float, float]:
+    """delta/p_hat/bias/mix すべてに独立の特異点処理を適用。"""
+    if not any([sc_delta, sc_p, sc_b, sc_m]):
+        return delta, p_hat, bias, mix
+
+    eps = 1e-12
+
+    if sc_delta is not None:
+        d_for_delta = p_hat if abs(p_hat) > eps else (eps if p_hat >= 0 else -eps)
+        delta = sc_delta.compute(n=1.0, R=delta, d=d_for_delta)
+
+    if sc_p is not None:
+        d_for_p = delta if abs(delta) > eps else (eps if delta >= 0 else -eps)
+        p_hat = sc_p.compute(n=1.0, R=p_hat, d=d_for_p)
+        # 確率レンジに戻したい場合はクリップ（実験で切り替え可能）
+        p_hat = float(np.clip(p_hat, 0.0, 1.0))
+
+    if sc_b is not None:
+        d_for_b = mix if abs(mix) > eps else (eps if mix >= 0 else -eps)
+        bias = sc_b.compute(n=1.0, R=bias, d=d_for_b)
+        bias = float(np.clip(bias, 0.0, 1.0))
+
+    if sc_m is not None:
+        d_for_m = bias if abs(bias) > eps else (eps if bias >= 0 else -eps)
+        mix = sc_m.compute(n=1.0, R=mix, d=d_for_m)
+        mix = float(np.clip(mix, 0.0, 1.0))
+
+    return float(delta), float(p_hat), float(bias), float(mix)
+
+
 def run_responsibility_quantum_loop(
     T: int = 250,
     acts_mode: str = "relu",        # 上の _ACTS_TABLE のキーから選択
     seed: Optional[int] = 7,
-    fluct_mode: str = "logit_gauss",# ResponsibilityAllow_actsの揺らぎモードをそのまま指定
+    fluct_mode: str = "logit_gauss",# acts_core の揺らぎモードに連動
     fluct_kwargs: Optional[Dict] = None,
     # 特徴量の初期値/線形変換（デモ用。実運用は実データで差し替え）
     x0: Optional[np.ndarray] = None,
     W: Optional[np.ndarray] = None,
     b: Optional[np.ndarray] = None,
-    params: Optional[SimParams] = None
+    params: Optional[SimParams] = None,
+    *,
+    expose_events: bool = False,
+    use_singularity: bool = False,
+    sing_delta: Optional[dict] = None,
+    sing_p_hat: Optional[dict] = None,
+    sing_bias: Optional[dict] = None,
+    sing_mix: Optional[dict] = None,
 ) -> Dict:
     if seed is not None:
         np.random.seed(seed)
@@ -339,7 +289,11 @@ def run_responsibility_quantum_loop(
 
     pos_fn, neg_fn, center = _ACTS_TABLE[acts_mode]
 
-    # ---- デモ用の既定（必要なら引数で上書き）----
+    sc_delta, sc_p, sc_b, sc_m = _build_singularity_instances(
+        use_singularity, sing_delta, sing_p_hat, sing_bias, sing_mix
+    )
+
+    # ---- 既定（必要なら引数で上書き）----
     x = x0 if x0 is not None else np.array([1.0, -0.5, 0.8, 0.2])
     W = W  if W  is not None else np.array([
         [ 0.6, -0.2, 0.3, -0.5],
@@ -355,6 +309,7 @@ def run_responsibility_quantum_loop(
         "p_motion": [], "delta": [], "p_hat": [], "label": [],
         "mix": [], "angle": [], "bias": [], "events": []
     }
+    lightning_count = 0
 
     for t in range(T):
         if t > 0:
@@ -369,10 +324,18 @@ def run_responsibility_quantum_loop(
             center=center, verbose=False
         )
 
-        delta   = ana["delta"]
-        p_hat   = ana["p_hat"]
-        label   = ana["label"]
+        delta   = float(ana["delta"])
+        p_hat   = float(ana["p_hat"])
+        label   = int(ana["label"])
         pos_part, neg_strength = ana["pos_part"], ana["neg_strength"]
+
+        mix = float(strength_to_mix(pos_part, neg_strength))
+        bias = float(prob_to_bias(p_hat))
+
+        # === 特異点処理（全適用/独立インスタンス） ===
+        delta, p_hat, bias, mix = _apply_singularity_all(
+            delta, p_hat, bias, mix, sc_delta, sc_p, sc_b, sc_m
+        )
 
         # “矢”角 → 量子回転（q0）
         angle = delta_to_angle(delta, k_theta=0.9)
@@ -381,9 +344,10 @@ def run_responsibility_quantum_loop(
 
         # ラベルで稲妻トリガ
         if label == 1:
-            bias = prob_to_bias(p_hat)
             eng._lightning_pulse(bias)
-            eng.log.events.append(f"[t={t}] LIGHTNING(by bridge) bias={bias:.2f}")
+            if expose_events:
+                eng.log.events.append(f"[t={t}] LIGHTNING(by bridge) bias={bias:.2f}")
+            lightning_count += 1
             # 人側へ軽い衝撃
             eng.side.tension = 0.0
             eng.side.fear    = min(1.0, eng.side.fear + 0.4)
@@ -391,7 +355,6 @@ def run_responsibility_quantum_loop(
             eng.side.external_input = 1
             eng.side.sound_timer = max(eng.side.sound_timer, eng.params.sound_hold_steps)
         else:
-            mix = strength_to_mix(pos_part, neg_strength, k_m=0.12)
             eng._sound_return_mix(mix)
 
         # 人×量子の自然ダイナミクス
@@ -402,40 +365,62 @@ def run_responsibility_quantum_loop(
         timeline["delta"].append(float(delta))
         timeline["p_hat"].append(float(p_hat))
         timeline["label"].append(int(label))
-        timeline["mix"].append(float(strength_to_mix(pos_part, neg_strength)))
+        timeline["mix"].append(float(mix))
         timeline["angle"].append(float(angle))
-        timeline["bias"].append(float(prob_to_bias(p_hat)) if label == 1 else 0.0)
+        timeline["bias"].append(float(bias))
         if len(eng.log.events) and (timeline["events"][-1] if timeline["events"] else None) != eng.log.events[-1]:
             timeline["events"].append(eng.log.events[-1])
 
-    return {"timeline": timeline, "events": timeline["events"], "engine_log": eng.log, "params": eng.params}
+    mean_p_motion = float(np.mean(timeline["p_motion"]))
 
-# --- 4. drop-in replacement: run_responsibility_quantum_loop と __main__ ---
+    return {
+        "timeline": timeline,
+        "engine_log": eng.log,
+        "lightning_count": lightning_count,
+        "mean_p_motion": mean_p_motion,
+        "params": eng.params
+    }
 
-def run_responsibility_quantum_loop(
-    T: int = 250,
+
+# ====== 4) 多モーダル駆動ランナー（同様に特異点対応 4インスタンス） ======
+def run_multimodal_session(
+    T: int,
     acts_mode: str = "relu",
     seed: Optional[int] = 7,
     fluct_mode: str = "logit_gauss",
     fluct_kwargs: Optional[Dict] = None,
-    x0: Optional[np.ndarray] = None,
-    W: Optional[np.ndarray] = None,
-    b: Optional[np.ndarray] = None,
+    x0: Optional[np.ndarray] = None, W: Optional[np.ndarray] = None, b: Optional[np.ndarray] = None,
     params: Optional[SimParams] = None,
     *,
-    expose_events: bool = False  # ← 追加: Trueにすると従来通りevents文字列も残す
+    media_series: Optional[Dict[str, np.ndarray]] = None,
+    alpha_audio_tension: Tuple[float,float] = (0.15, 0.10),  # (onset, loud)
+    audio_onset_gate: float = 0.6,
+    beta_motion_delta: float = 0.8,      # 動き→delta 係数
+    beta_motion_mix: float = 0.25,       # 動き→mix 係数
+    expose_events: bool = False,
+    use_singularity: bool = False,
+    sing_delta: Optional[dict] = None,
+    sing_p_hat: Optional[dict] = None,
+    sing_bias: Optional[dict] = None,
+    sing_mix: Optional[dict] = None,
 ) -> Dict:
+    """
+    media_series は以下のキーを想定（長さTの配列）:
+      - beat_flag, onset_strength, loudness, motion_mag
+    """
     if seed is not None:
         np.random.seed(seed)
     if fluct_kwargs is None:
         fluct_kwargs = {"sigma": 0.35, "seed": None}
-
     if acts_mode not in _ACTS_TABLE:
         raise ValueError(f"unknown acts_mode: {acts_mode}")
-
     pos_fn, neg_fn, center = _ACTS_TABLE[acts_mode]
 
-    # 既定のデモ行列
+    sc_delta, sc_p, sc_b, sc_m = _build_singularity_instances(
+        use_singularity, sing_delta, sing_p_hat, sing_bias, sing_mix
+    )
+
+    # 既定特徴
     x = x0 if x0 is not None else np.array([1.0, -0.5, 0.8, 0.2])
     W = W  if W  is not None else np.array([
         [ 0.6, -0.2, 0.3, -0.5],
@@ -446,85 +431,85 @@ def run_responsibility_quantum_loop(
     b = b  if b  is not None else np.array([0.05, -0.1, 0.2, 0.0])
 
     eng = QuantumStillnessEngine(params or SimParams(T=T, tension_threshold=1.0, jitter_std=0.05))
+    timeline = {"p_motion": [], "delta": [], "p_hat": [], "label": [],
+                "mix": [], "angle": [], "bias": []}
+    lightning_count = 0
 
-    timeline = {
-        "p_motion": [], "delta": [], "p_hat": [], "label": [],
-        "mix": [], "angle": [], "bias": []
-    }
-    lightning_count = 0  # ← 追加: 稲妻回数カウンタ
+    # メディア系列
+    beat = media_series["beat_flag"] if (media_series and "beat_flag" in media_series) else np.zeros(T, np.float32)
+    onset = media_series["onset_strength"] if (media_series and "onset_strength" in media_series) else np.zeros(T, np.float32)
+    loud  = media_series["loudness"] if (media_series and "loudness" in media_series) else np.zeros(T, np.float32)
+    motion= media_series["motion_mag"] if (media_series and "motion_mag" in media_series) else np.zeros(T, np.float32)
 
     for t in range(T):
+        # --- 音で外界フラグ＆緊張をドライブ ---
+        eng.side.external_input = 1 if (beat[t] > 0.5 or onset[t] > audio_onset_gate) else 0
+        eng.side.tension += alpha_audio_tension[0]*float(onset[t]) + alpha_audio_tension[1]*float(loud[t])
+
+        # --- 既存の“責任”分析 ---
         if t > 0:
             x = next_features(x, noise=0.12)
-
         ana = analyze_activation(
-            x=x, W=W, b=b,
-            pos_fn=pos_fn, neg_fn=neg_fn,
+            x=x, W=W, b=b, pos_fn=pos_fn, neg_fn=neg_fn,
             name_pos="Pos", name_neg="Neg",
             tau=1.0, topk=None,
             fluct_mode=fluct_mode, fluct_kwargs=fluct_kwargs,
             center=center, verbose=False
         )
-
-        delta   = ana["delta"]
-        p_hat   = ana["p_hat"]
-        label   = ana["label"]
+        delta = float(ana["delta"]); p_hat = float(ana["p_hat"]); label = int(ana["label"])
         pos_part, neg_strength = ana["pos_part"], ana["neg_strength"]
 
-        # “矢”角 → 量子回転（q0）
+        # --- 映像の“動き”で delta と mix をブースト ---
+        motion_z = np.tanh( (float(motion[t]) - 0.5) * 2.0 )  # [-1,1]
+        delta = delta + beta_motion_delta * motion_z
+        mix = float(np.clip(strength_to_mix(pos_part, neg_strength, k_m=0.12) + np.clip(beta_motion_mix * abs(motion_z), 0.0, 1.0), 0.0, 1.0))
+        bias = float(prob_to_bias(p_hat))
+
+        # === 特異点処理（全適用/独立インスタンス） ===
+        delta, p_hat, bias, mix = _apply_singularity_all(
+            delta, p_hat, bias, mix, sc_delta, sc_p, sc_b, sc_m
+        )
+
+        # --- 矢（Ry角） ---
         angle = delta_to_angle(delta, k_theta=0.9)
         qc = QuantumCircuit(2); qc.ry(angle, 0)
         eng._sv = eng._sv.evolve(qc)
 
-        # ラベルで稲妻トリガ（表には出さない）
+        # --- 稲妻 or 音の帰還ミックス ---
         if label == 1:
-            bias = prob_to_bias(p_hat)
             eng._lightning_pulse(bias)
             if expose_events:
-                eng.log.events.append(f"[t={t}] LIGHTNING(by bridge) bias={bias:.2f}")
-            lightning_count += 1  # ← カウントだけ増やす
-
-            # 人側へ軽い衝撃
+                eng.log.events.append(f"[t={t}] LIGHTNING(by media) bias={bias:.2f}")
+            lightning_count += 1
             eng.side.tension = 0.0
             eng.side.fear    = min(1.0, eng.side.fear + 0.4)
             eng.side.wonder  = min(1.0, eng.side.wonder + 0.2)
             eng.side.external_input = 1
             eng.side.sound_timer = max(eng.side.sound_timer, eng.params.sound_hold_steps)
         else:
-            mix = strength_to_mix(pos_part, neg_strength, k_m=0.12)
             eng._sound_return_mix(mix)
 
-        # 人×量子の自然ダイナミクス
+        # --- 1ステップ進行 & ログ ---
         eng._step(t)
-
-        # ログ（確率など）
         timeline["p_motion"].append(eng._prob_motion())
         timeline["delta"].append(float(delta))
         timeline["p_hat"].append(float(p_hat))
         timeline["label"].append(int(label))
-        timeline["mix"].append(float(strength_to_mix(pos_part, neg_strength)))
+        timeline["mix"].append(float(mix))
         timeline["angle"].append(float(angle))
-        timeline["bias"].append(float(prob_to_bias(p_hat)) if label == 1 else 0.0)
+        timeline["bias"].append(float(bias))
 
-    mean_p_motion = float(np.mean(timeline["p_motion"]))  # ← 追加: 平均確率
-
-    return {
-        "timeline": timeline,
-        "engine_log": eng.log,             # eventsはexpose_events=True時のみ詳細あり
-        "lightning_count": lightning_count,
-        "mean_p_motion": mean_p_motion,
-        "params": eng.params
-    }
+    mean_p_motion = float(np.mean(timeline["p_motion"]))
+    return {"timeline": timeline, "engine_log": eng.log,
+            "lightning_count": lightning_count,
+            "mean_p_motion": mean_p_motion,
+            "params": eng.params}
 
 
-if __name__ == "__main__":
-    out = run_responsibility_quantum_loop(
-        T=180,
-        acts_mode="relu",
-        seed=42,
-        fluct_mode="logit_gauss",
-        fluct_kwargs={"sigma":0.35, "seed":None},
-        expose_events=False  # ← ここをTrueにすると従来のevents文字列も保存
-    )
-    print(f"lightning_count: {out['lightning_count']}")
-    print(f"mean P(Motion): {out['mean_p_motion']:.3f}")
+__all__ = [
+    "SimParams", "Log", "HumanSide",
+    "QuantumStillnessEngine",
+    "run_responsibility_quantum_loop",
+    "run_multimodal_session",
+    "delta_to_angle", "prob_to_bias", "strength_to_mix", "next_features"
+]

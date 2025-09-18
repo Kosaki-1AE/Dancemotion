@@ -1,9 +1,9 @@
-# responsibility_allow/flow.py
-import numpy as np
-from typing import Dict, Optional, Callable
-from analyze import analyze_activation, analyze_activation_complex
+# responsibility_allow/flow.py　責任ベクトル（実数・複素数）に変換＆即興的に“進む／待つ”判断の更新と学習する
+from typing import Callable, Dict, Optional
 
-from complex_ops import make_complex_vector, complex_linear, split_real_imag
+import numpy as np
+from analyze import analyze_activation, analyze_activation_complex
+from complex_ops import complex_linear, make_complex_vector, split_real_imag
 
 Act = Callable[[np.ndarray], np.ndarray]
 

@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-# ResponsibilityAllow_acts.py — 活性化だけ＆出力フォーマットはReLU版とおそろい
+# ResponsibilityAllow_acts.py — 活性化関係だけ＆出力フォーマットはReLU版とおそろい
+
+from typing import Callable, Dict
 
 import numpy as np
-from typing import Callable, Dict
+
 
 # ========= 活性化（正） =========
 def relu(x: np.ndarray) -> np.ndarray:
