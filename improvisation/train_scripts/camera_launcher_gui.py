@@ -8,9 +8,9 @@ from tkinter import filedialog, messagebox, ttk
 import cv2
 import numpy as np
 
-from qstillness_unified_plus import (QuantumStillnessEngine, SimParams,
+from base_scripts.qstillness_unified_plus import (QuantumStillnessEngine, SimParams,
                                      delta_to_angle)
-from sensors_switchboard import SensorSwitchboard  # 前ターンで渡したファイル
+from .sensors_switchboard import SensorSwitchboard  # 前ターンで渡したファイル
 
 # ===== 実行ループ（GUIで集めた設定を使って起動） =====
 def run_session(use_gaze: bool, use_flow: bool, audio_path: str | None,

@@ -8,10 +8,20 @@ import cv2
 import numpy as np
 
 from base_scripts.qstillness_unified_plus import QuantumStillnessEngine, SimParams
-from scouter_overlay import ScouterHUD  # ← 先頭に追加
+from .scouter_overlay import ScouterHUD  # ← 先頭に追加
 
 # ===== エンジン初期化（callableにしない） =====
 eng = QuantumStillnessEngine(SimParams(T=999999))  # 長く回せるように
+try:
+    from .scouter_overlay import ScouterHUD
+except Exception:
+    try:
+        from scouter_overlay import ScouterHUD
+    except Exception:
+        class ScouterHUD:
+            def __init__(self, *a, **k): pass
+            def update(self, **k): pass
+            def apply(self, frame): return frame
 
 # ===== MediaPipe（無ければ自動フォールバック） =====
 try:
@@ -19,6 +29,23 @@ try:
     mp_face = mp.solutions.face_mesh
 except Exception:
     mp_face = None  # 未インストールでも落ちない
+
+def run_camera_session(source=0, width=1280, height=720, window="Dancemotion — Camera"):
+    cap = cv2.VideoCapture(source)
+    if width:  cap.set(cv2.CAP_PROP_FRAME_WIDTH,  width)
+    if height: cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+    hud = ScouterHUD(title="SCOUTER")
+    t0 = time.time(); n=0
+    while True:
+        ok, frame = cap.read()
+        if not ok: break
+        n += 1
+        fps = n / max(1e-6, time.time()-t0)
+        hud.update(fps=fps, energy=0.5, still=0.33)  # ← 実スコアに差し替え可
+        frame = hud.apply(frame)
+        cv2.imshow(window, frame)
+        if (cv2.waitKey(1) & 0xFF) in (27, ord('q')): break
+    cap.release(); cv2.destroyAllWindows()
 
 # ===== 視線/瞬目/「ま」を推定する軽量クラス =====
 class GazeMaEstimator:

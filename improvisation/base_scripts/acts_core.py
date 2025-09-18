@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 # ResponsibilityAllow_acts.py — 活性化関係だけ＆出力フォーマットはReLU版とおそろい
 
+# -*- coding: utf-8 -*-
 from typing import Callable, Dict
-
 import numpy as np
 
-
-# ========= 活性化（正） =========
+# === 正側活性 ===
 def relu(x: np.ndarray) -> np.ndarray:
     return np.maximum(0.0, x)
 
@@ -20,27 +19,45 @@ def tanh(x: np.ndarray) -> np.ndarray:
     return np.tanh(x)
 
 def silu(x: np.ndarray) -> np.ndarray:
-    return x * sigmoid(x)
+    s = 1.0 / (1.0 + np.exp(-x))
+    return x * s
 
 def gelu(x: np.ndarray) -> np.ndarray:
-    # Hendrycks & Gimpel 近似（×x は不要）
-    return 0.5 * x * (1.0 + np.tanh(np.sqrt(2/np.pi) * (x + 0.044715 * (x**3))))
+    # Hendrycks & Gimpel 近似
+    return 0.5 * x * (1.0 + np.tanh(np.sqrt(2.0/np.pi) * (x + 0.044715 * (x**3))))
 
-# ========= 負版（鏡像）：f_neg(x) = - f(-x) =========
-def negify(act_fn: Callable[[np.ndarray], np.ndarray]) -> Callable[[np.ndarray], np.ndarray]:
-    def _neg(x: np.ndarray) -> np.ndarray: return -act_fn(-x)
-    _neg.__name__ = f"neg_{act_fn.__name__}"
+# === 負版を作るファクトリ ===
+def negify(f: Callable[[np.ndarray], np.ndarray]) -> Callable[[np.ndarray], np.ndarray]:
+    def _neg(x: np.ndarray) -> np.ndarray:
+        return -f(-x)
+    _neg.__name__ = f"neg_{f.__name__}"
     return _neg
 
-# ========= レジストリ =========
+# === 負版 実体 ===
+neg_relu       = negify(relu)
+def neg_leaky_relu(x: np.ndarray, alpha: float = 0.01) -> np.ndarray:
+    return -leaky_relu(-x, alpha=alpha)
+neg_sigmoid    = negify(sigmoid)
+neg_tanh       = negify(tanh)    # tanhは奇関数→実質同じ
+neg_silu       = negify(silu)
+neg_gelu       = negify(gelu)
+
+# === レジストリ ===
 _BASE: Dict[str, Callable[[np.ndarray], np.ndarray]] = {
-    "relu": relu,
-    "leaky_relu": leaky_relu,  # alpha固定版を作るなら partial で別名登録でもOK
-    "sigmoid": sigmoid,
-    "tanh": tanh,
-    "silu": silu,
-    "gelu": gelu,
+    "relu": relu, "leaky_relu": leaky_relu, "sigmoid": sigmoid, "tanh": tanh,
+    "silu": silu, "gelu": gelu,
+    "neg_relu": neg_relu, "neg_leaky_relu": neg_leaky_relu, "neg_sigmoid": neg_sigmoid,
+    "neg_tanh": neg_tanh, "neg_silu": neg_silu, "neg_gelu": neg_gelu,
 }
+
+# === 公開シンボル ===
+__all__ = [
+    "relu", "leaky_relu", "sigmoid", "tanh", "silu", "gelu",
+    "negify",
+    "neg_relu", "neg_leaky_relu", "neg_sigmoid", "neg_tanh", "neg_silu", "neg_gelu",
+    "_BASE",
+]
+
 ACTS: Dict[str, Callable[[np.ndarray], np.ndarray]] = {}
 for name, fn in _BASE.items():
     ACTS[name] = fn
