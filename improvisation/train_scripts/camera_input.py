@@ -7,7 +7,7 @@ import time
 import cv2
 import numpy as np
 
-from qstillness_unified_plus import QuantumStillnessEngine, SimParams
+from base_scripts.qstillness_unified_plus import QuantumStillnessEngine, SimParams
 from scouter_overlay import ScouterHUD  # ← 先頭に追加
 
 # ===== エンジン初期化（callableにしない） =====

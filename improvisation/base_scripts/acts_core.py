@@ -28,8 +28,7 @@ def gelu(x: np.ndarray) -> np.ndarray:
 
 # ========= 負版（鏡像）：f_neg(x) = - f(-x) =========
 def negify(act_fn: Callable[[np.ndarray], np.ndarray]) -> Callable[[np.ndarray], np.ndarray]:
-    def _neg(x: np.ndarray) -> np.ndarray:
-        return -act_fn(-x)
+    def _neg(x: np.ndarray) -> np.ndarray: return -act_fn(-x)
     _neg.__name__ = f"neg_{act_fn.__name__}"
     return _neg
 

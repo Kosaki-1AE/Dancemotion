@@ -2,8 +2,8 @@
 from typing import Callable, Dict, Optional
 
 import numpy as np
-from analyze import analyze_activation, analyze_activation_complex
-from complex_ops import complex_linear, make_complex_vector, split_real_imag
+from .analyze import analyze_activation, analyze_activation_complex
+from .complex_ops import complex_linear, make_complex_vector, split_real_imag
 
 Act = Callable[[np.ndarray], np.ndarray]
 

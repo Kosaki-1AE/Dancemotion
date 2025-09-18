@@ -4,10 +4,10 @@ import sys
 
 sys.path.append("./modules")
 
-from finetune_scripts.camera_input import run_camera_session  # ※下にテンプレ置いた
+from train_scripts.camera_input import run_camera_session  # ※下にテンプレ置いた
 # 既存の3つ＋将来用のagent
-from finetune_scripts.camera_launcher_gui import main as gui_main
-from finetune_scripts.serve_with_qr import main as server_main
+from train_scripts.camera_launcher_gui import main as gui_main
+from train_scripts.serve_with_qr import main as server_main
 
 # from agent import AgentConfig, TurnState, decide, update  # 使いたくなったら
 

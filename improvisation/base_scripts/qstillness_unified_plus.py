@@ -17,11 +17,11 @@ from qiskit import QuantumCircuit
 from qiskit.quantum_info import Statevector
 
 # === ユーザー提供モジュール ===
-from .acts_core import (analyze_activation, gelu, leaky_relu,  # type: ignore
-                        neg_gelu, neg_leaky_relu, neg_relu, neg_sigmoid,
-                        neg_silu, relu, sigmoid, silu, tanh)
+# type: ignore
+from base_scripts import acts_core as acts
+from .analyze import analyze_activation  # noqa: F401  (使う側で活用可能)  # type: ignore
 from .fluct import \
-    apply_psych_fluctuation  # noqa: F401  (使う側で活用可能)  # type: ignore
+    apply_psych_fluctuation  # noqa: F401  (使う側で活用可能)  type: ignore
 from .singular_module import SingularCalculator  # type: ignore
 
 
@@ -194,12 +194,12 @@ def next_features(x: np.ndarray, noise=0.12) -> np.ndarray:
 # ========== 3) 実行ループ（活性をフルに選べる） ==========
 _ACTS_TABLE = {
     # name: (pos_fn, neg_fn, center)
-    "relu":        (relu,        neg_relu,        "auto"),
-    "leaky(0.1)": (lambda z: leaky_relu(z, alpha=0.1),
-                   lambda z: neg_leaky_relu(z, alpha=0.1), "auto"),
-    "silu":        (silu,        neg_silu,        "auto"),
-    "gelu":        (gelu,        neg_gelu,        "auto"),
-    "sigmoid":     (sigmoid,     neg_sigmoid,     0.5),
+    "relu":        (acts.relu,        acts.neg_relu,        "auto"),
+    "leaky(0.1)":  (lambda z: acts.leaky_relu(z, alpha=0.1),
+                   lambda z: acts.neg_leaky_relu(z, alpha=0.1), "auto"),
+    "silu":        (acts.silu,        acts.neg_silu,        "auto"),
+    "gelu":        (acts.gelu,        acts.neg_gelu,        "auto"),
+    "sigmoid":     (acts.sigmoid,     acts.neg_sigmoid,     0.5),
     # tanhは奇関数なのでneg_tanh==tanh。必要なら追加してOK。
 }
 

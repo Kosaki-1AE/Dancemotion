@@ -3,10 +3,10 @@
 from typing import Callable, Dict, List, Optional
 
 import numpy as np
-from complex_ops import split_real_imag
-from contrib import split_contrib
-from fluct import apply_psych_fluctuation
-from linops import linear_transform
+from .complex_ops import split_real_imag
+from .contrib import split_contrib
+from .fluct import apply_psych_fluctuation
+from .linops import linear_transform
 
 Act = Callable[[np.ndarray], np.ndarray]
 
