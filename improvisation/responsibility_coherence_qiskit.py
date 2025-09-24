@@ -21,12 +21,16 @@ from dataclasses import dataclass
 from typing import List, Tuple
 
 import numpy as np
-
 from qiskit import QuantumCircuit, transpile
 from qiskit.circuit.library import SXGate
-from qiskit.providers.aer import AerSimulator
-from qiskit.providers.aer.noise import NoiseModel, thermal_relaxation_error
+from qiskit.quantum_info import Statevector
 
+# 以前の AER 実行ブロックの代わり：
+def run_ideal(qc: QuantumCircuit):
+    sv = Statevector.from_label('0' * qc.num_qubits)
+    sv = sv.evolve(qc)              # 回路を適用
+    probs = sv.probabilities_dict() # 観測確率
+    return probs
 # ===================== パラメタ定義 =====================
 
 @dataclass
