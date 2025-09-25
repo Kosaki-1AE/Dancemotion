@@ -1,10 +1,10 @@
 # responsibility_allow/demo.py　一応全体の計算まとめがここね
 import numpy as np
-from .acts_core import get_activation  # 既存の活性化モジュール
-from .analyze import analyze_activation
-from .complex_ops import split_real_imag  # 複素ベクトルの実部/虚部分解
-from .flow import FlowState, make_ev_decider_core
-from .linops import linear_transform
+from acts_core import get_activation  # 既存の活性化モジュール
+from analyze import analyze_activation
+from complex_ops import split_real_imag  # 複素ベクトルの実部/虚部分解
+from flow import FlowState, make_ev_decider_core
+from linops import linear_transform
 
 
 def print_pair_result(x, z, pos_name, neg_name, out):
