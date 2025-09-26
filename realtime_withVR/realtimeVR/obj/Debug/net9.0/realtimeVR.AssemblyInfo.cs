@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("realtimeVR")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+eb1676fe26da8e746a660cf3e7250d1c39123054")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6053e85e0e7c24ef305ce3fdd54fd68b20d1e287")]
 [assembly: System.Reflection.AssemblyProductAttribute("realtimeVR")]
 [assembly: System.Reflection.AssemblyTitleAttribute("realtimeVR")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
