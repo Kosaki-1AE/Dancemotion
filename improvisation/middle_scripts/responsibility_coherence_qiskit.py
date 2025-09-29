@@ -83,7 +83,7 @@ def build_noise_model(T1: float, T2: float, dt: float, idle_ns: float) -> Tuple[
     # 熱緩和エラー（T1,T2, duration*dt）を Delay に紐付け
     # Qiskitでは理想Delay自体に直接エラー付与しづらいので、id(I)やu1-likeに付ける手もあるが
     # ここでは「sx」「x」「id」を“アイドル近似”として同等時間扱いにして付与する。
-    err = thermal_relaxation_error(T1=T1, T2=T2, time=duration * dt, excited_state_population=0.0)
+    ｓerr = thermal_relaxation_error(T1=T1, T2=T2, time=duration * dt, excited_state_population=0.0)
     for g in ["id", "sx", "x"]:
         noise.add_quantum_error(err, g, [0])
 
@@ -115,23 +115,13 @@ def coherence_probe_circuit(idle_duration: int, reps: int = 1) -> QuantumCircuit
 
 def run_sweep(params: RespParams):
     T1, T2 = map_resp_to_T1T2(params)
-    noise, duration = build_noise_model(T1, T2, params.dt, params.idle_step_ns)
 
-    sim = AerSimulator(noise_model=noise)
     results = []
-
     for steps in params.steps_list:
-        qc = coherence_probe_circuit(idle_duration=duration, reps=steps)
-        tqc = transpile(qc, sim, optimization_level=0)
-        job = sim.run(tqc, shots=4096)
-        res = job.result()
-        counts = res.get_counts()
-
-        p0 = counts.get("0", 0) / 4096.0
-        p1 = counts.get("1", 0) / 4096.0
-        # X測定で |+> は理想的に 0 が 100%（H→Z測定）
-        # 減衰で均等化に近づく → <X> = p(0) - p(1)
-        exp_X = p0 - p1
+        t = (steps * params.idle_step_ns) * 1e-9  # 総待機時間 [s]
+        exp_X = math.exp(-t / T2)                 # <X>(t) = e^{-t/T2}
+        p0 = (1.0 + exp_X) / 2.0                  # X基底での0確率
+        p1 = 1.0 - p0
 
         results.append({
             "steps": steps,
@@ -146,7 +136,7 @@ def run_sweep(params: RespParams):
         "T2_s": T2,
         "idle_step_ns": params.idle_step_ns,
         "dt_s": params.dt,
-        "duration_slots_per_step": duration,
+        "duration_slots_per_step": None,
         "sweep": results,
     }
 
