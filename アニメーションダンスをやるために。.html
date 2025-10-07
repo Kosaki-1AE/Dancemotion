@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>アニメーションダンスをやるために</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
+
+        body {
+        font-family: 'Noto Sans JP', sans-serif;
+        margin: 0;
+        display: flex;
+        background-color: #0f0f0f;
+        color: #f0f0f0;
+        }
+
+        nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 240px;
+        background: linear-gradient(to bottom, #1a1a1a, #111);
+        color: white;
+        padding: 2rem 1.2rem;
+        box-sizing: border-box;
+        overflow-y: auto;
+        border-right: 1px solid #333;
+        z-index: 1000;
+        }
+
+        nav h2 {
+        font-size: 1.4rem;
+        margin-bottom: 2rem;
+        color: #ff3399;
+        border-bottom: 1px solid #333;
+        padding-bottom: 0.5rem;
+        }
+
+        nav a {
+        color: #bbb;
+        text-decoration: none;
+        display: block;
+        margin: 1rem 0;
+        padding-left: 0.5rem;
+        border-left: 3px solid transparent;
+        transition: all 0.3s ease;
+        }
+
+        nav a:hover,
+        nav a.active {
+        color: #fff;
+        font-weight: bold;
+        border-left: 3px solid #ff3399;
+        background-color: #222;
+        }
+
+        main {
+        margin-left: 260px;
+        padding: 3rem 2rem;
+        max-width: 900px;
+        width: 100%;
+        }
+
+        section {
+        margin-bottom: 5rem;
+        padding: 2rem;
+        border-radius: 12px;
+        }
+
+        section:nth-of-type(1) {
+        background: radial-gradient(circle at top left, rgb(3, 91, 91), rgb(12, 12, 31) 70%);
+        border: 2px dashed rgb(51, 51, 255);
+        box-shadow: inset 0 0 30px rgb(76, 252, 252), 0 0 25px rgb(73, 73, 173);
+        }
+
+        section:nth-of-type(2) {
+        background: linear-gradient(135deg, rgb(2, 176, 176), rgb(0, 0, 255));
+        border: 2px solid rgb(0, 255, 98);
+        box-shadow: 0 0 20px rgb(234, 0, 255);
+        }
+
+        section:nth-of-type(3) {
+        background: linear-gradient(135deg, #592474, #442a44);
+        border: 2px solid rgb(101, 21, 12);
+        box-shadow: 0 0 20px rgb(116, 47, 122);
+        }
+
+        section:nth-of-type(4) {
+        background: linear-gradient(135deg, #335c33, #2f4f2f);
+        border: 2px solid rgb(121, 147, 131);
+        box-shadow: 0 0 20px rgb(78, 12, 12);
+        }
+        
+        section:nth-of-type(5) {
+        background: linear-gradient(135deg, #6d3333, #4f2f2f);
+        border: 2px solid rgba(166, 60, 155, 0.66);
+        box-shadow: 0 0 20px rgb(105, 96, 27);
+        }
+
+        section:nth-of-type(6) {
+        background: linear-gradient(135deg, #7777c4, #3a3a5a);
+        border: 2px solid rgba(160, 223, 26, 0.441);
+        box-shadow: 0 0 20px rgb(124, 230, 164);
+        }
+
+        h2 {
+        font-size: 1.6rem;
+        color: #ff6666;
+        border-bottom: 2px solid #4b2b2b;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+        }
+
+        p {
+        line-height: 1.9;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        }
+
+        strong {
+        color: #f06292;
+        }
+
+        footer {
+        background-color: #1a1a1a;
+        color: #888;
+        text-align: center;
+        padding: 2rem;
+        border-top: 1px solid #333;
+        }
+
+        @media (max-width: 768px) {
+        nav {
+            display: none;
+        }
+        main {
+            margin: 0;
+            padding: 2rem 1rem;
+        }
+        }
+    </style>
+    </head>
+    <body>
+    <nav>
+        <h2>目次</h2>
+        <a href="#intro">はじめに</a>
+        <a href="#elements">軸・骨・筋肉</a>
+        <a href="#reason">意識する理由</a>
+        <a href="#quality">出来栄えを意識</a>
+        <a href="#always">『常に』を意識</a>
+        <a href="#nuance">ニュアンスは崩れやすい</a>
+    </nav>
+    <main>
+        <section id="intro">
+        <h2>はじめに</h2>
+        <p>お疲れ様です。5zk(エスエスケー)でございます。</p>
+        <p>俺だけ何も貢献できてないなぁとつくづく思いましてね。でも俺といえばYouTubeやらインスタのリール動画やらがある、でも振付師とかの経験もないから物足りなさしかないみたいな状態でして。</p>
+        <p>そんなときに思ったわけです。卒論研究の内容、少しくらいなら書いても良いんじゃない？って。</p>
+        <p>卒論の研究のテーマが<strong>「即興ダンスのアルゴリズム生成と間合いの探求」</strong>なんすけど、ある程度内容がまとまってきたんで今一度書いてみようと思いまして。</p>
+        <p>タイトルでは「アニメーションダンス」と書いてるんすけど、ストリートダンス全般に通じる内容になってるので共有しようという次第でございます。</p>
+        <p>なお文章だけの内容でございます。読むのが苦痛かもしれんすけど、そこは頑張って頂いて。とりあえず始めます。</p><br>
+        </section>
+        <section id="elements">
+        <h2>『軸・骨・筋肉』を意識する</h2>
+        <p>まずは自分のダンスのスタイル(決まってない人は目標としてるモデルでも可)を<strong>軸・骨・筋肉</strong>という3つの要素に分解します。</p>
+        <p>軸ってのは<strong>重心や全体のバランス</strong>、骨は<strong>全体構造そのもの</strong>、筋肉は<strong>その瞬間のアドリブ</strong>が該当します。</p>
+        <p>なのでまずはこの3つの要素を意識して、ダンスの動きを分解してみてほしいんすね。</p><br><br>
+        </section>
+        <section id="reason">
+        <h2>この3つの要素を意識する理由</h2>
+        <p>ストリートダンス、その中でもアニメーションというジャンルでは上記3つの概念を色々使いまして、<strong>「自由に切り分けて調整しながら理想の形に持っていく」</strong>というのが理想の目標になります</p>
+        <p>例として挙げられる分け方としては腕が1番分かりやすくて、腕の位置<strong>(骨)</strong>とその時々に1番重く感じる部分<strong>(軸)</strong>、どこの力を抜いている？<strong>(筋肉)</strong>みたいな感じで分けて考えられるようになるんすね。</p>
+        <p>この時の特異な例として上げやすいのがキョンシーの腕なんですけど、あれって手首から先だけが脱力になってるとかいう構造で考えると意味分からんものじゃないすか。</p>
+        <p>でも今回は全部分けて考えてるので、それぞれどんくらいの割合にすりゃいいんか？っていうので考えると何となく分かるかと思います。</p>
+        <p>例えばキョンシーの腕をやるときは、<strong>軸</strong>で肩から手首までの間で重心を置いて、<strong>骨</strong>で手首から先を脱力させて、<strong>筋肉</strong>でも手首から先だけを使うみたいな感じでさ。</p>
+        <p>こういう風に分けて考えることで、<strong>「どこに重心を置くか」「どこを脱力するか」「どこに力を入れるか」というのを明確に区別できるようになる</strong>んで、「流れ的にこう動かすのは重要なのかー」みたいな感じでダンスの動きを判断できるようになるんすね。</p><br><br>
+        </section>
+        <section id="quality">
+        <h2>『全体としての出来栄え』を意識する</h2>
+        <p>これはアニメーションだけじゃなく他のジャンルでも言えることなんですが、上記のポイントのどれか一つでも狂ってしまうと<strong>「全体としてみたときの出来栄えが満足できない&なんか違う」</strong>という結果に繋がりかねないんですね。</p>
+        <p>5zkとして活動するときにも「全体として見たときの満足度」を考えて行動することが多いんすけど、ダンサーとして上手くなりたいならば是非とも<strong>逐一全体としての出来栄えを考えながら踊ってみる</strong>ということをお勧めしたい。</p>
+        <p>これを意識し始めると、思った以上に「間合い」を意識せなあかんことに気づくと思います。そんでこれを習得するにはアホほど時間が要るってことも同時に理解せざるを得なくなるはずですww</p>
+        <p>是非たっぷり苦しんでください。そして楽しんでくださいませ。だんだん面白さに気づいてくると思いますんで。</p><br><br>
+        </section>
+        <section id="always">
+        <h2>『常に』を意識する</h2>
+        <p>そんでもってアニメーションダンスをやる上で必要不可欠なことがあります。<strong>「常に」</strong>を意識することです。</p>
+        <p>このジャンルの特性上なのか、途中停止や逆再生といった動きをするのが結構普通にあるので、常日頃を意識する必要が強制的に出てくるんすよね。</p>
+        <p>んでこれやってると<strong>「曲的にこうなりそうやなぁ」</strong>みたいなことへの表現の幅が圧倒的に増えるってことになってきますし、曲に対する遊び方も分かってきます。まぁ日常の動作の中で「これ使えそうやなぁ」みたいにして導入なんてこともできるんでね。</p>
+        <p>日常系の話で繋げられることがもう一つありまして。慣れてくると<strong>慣性とかも全部自分のものにできる</strong>ようになってくるんすね。「この動作の起爆剤としてヒットを使うんだけど、そのあとを慣性で流れるようにしよう！」みたいな感じで。そこまでいけるようになるともう<strong>ゴールに近いかなー</strong>とは思うすね。</p>
+        <p>ちなみに本当に上手くなりたいなら一回<strong>狂うほど行くしかない</strong>ってのは言えるんすよね。間違いなく。周囲が気持ち悪がるくらいには狂う方が良い、というか狂ってないと突き抜けられない。</p>
+        <p>本当に常に考えているような状態じゃないとやっていけないんでね。ここだけはただただ好きとかそういう根性というか執念というかで頑張ってほしいところです。</p>
+        <p>あとはー、がんばれ。時間かかるけどその分えげつないものがついてくるからね。</p><br><br>
+        </section>
+        <section id="nuance">
+        <h2>ニュアンスは崩れやすい</h2>
+        <p>即興でやるとき用のも作っておかんとこれの意味ないかもと思ったので作っておきますわ。</p>
+        <p>最初から極意を言うておきます。「とりあえずできるもの」を3つ作っといてくださいませ。それもジャンル問わずで。</p>
+        <p>自分のジャンル以外でも遊べるようなものをとりあえず3個くらい作っといた方が良いと思います。遊びやすいでしょ、単純に。</p>
+        <p>そしてこのときにニュアンスとかも意識できると嬉しいんだけど、俺の経験上ほぼほぼ無理です。しかもこれ、最初のうちはとかのレベルじゃない。曲に依存するからっていう理由なんだけどさ。</p>
+        <p>なので<strong>色んな曲を聞くことで自分が欲しいニュアンスを見つける</strong>という方向性にしてください。こっちの方が圧倒的に曲の流れを見つけやすいし汲み取りやすいです。</p>
+        <p>つまりは<strong>練習の時から本番用で練習する癖を付けとけ</strong>ってことなんです。</p>
+        <p>ここまで説明されないと分からんからみんな本気ではやらないんだけど、ダンスを慣れてくるとこういう目線になってくるんでやるようになるっていうことなんです。俺がそうだったんでね。</p>
+        <p>ニュアンスが見つけられないとテンポと振り付けに沿わせてるだけになってしまうんで、振付師からの呼び出しやら「なんで真面目にやらないの！」とか言われることになるんすけど。</p>
+        <p>なのでニュアンスを見つける為にも<strong>振付師の言うことをちゃんと聞く</strong>ってことを徹底した方が良いです。その意味で言うと俺は遅すぎたのでね。さすがに2年じゃ無理だった。振付師からの<strong>これをしてください！！</strong>っていう指示に100%の自信を持って従うっていうことができなかったし。</p>
+        <p>そこで経験則から少なくとも3年くらいは一緒にやっとかんとできないもんなんだなぁって思ったんでね。その意味では皆様はもう勝ち組なのかも。あとは本気でダンスに向き合えるかによります。是非とも頑張って頂きたいです、はい。</p><br><br>
+        </section>
+    </main>
+    <footer>
+        <p>© 2025 5zkがこの4年間の苦しみをまとめてみた結果.....</p>
+    </footer>
+    <script>
+        const sections = document.querySelectorAll("section");
+        const navLinks = document.querySelectorAll("nav a");
+
+        window.addEventListener("scroll", () => {
+        let current = "";
+
+        sections.forEach((section) => {
+            const sectionTop = section.offsetTop - 100;
+            if (pageYOffset >= sectionTop) {
+            current = section.getAttribute("id");
+            }
+        });
+
+        navLinks.forEach((link) => {
+            link.classList.remove("active");
+            if (link.getAttribute("href") === "#" + current) {
+            link.classList.add("active");
+            }
+        });
+        });
+    </script>
+</body>
+</html>
