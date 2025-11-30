@@ -1,0 +1,88 @@
+extends: Y-Theory-Core
+name: Y-Theory-Communication
+channels:
+  text: {enabled: true}
+  voice: {enabled: true, prosody: [pitch, energy, rate, pause]}
+  nonverbal: {enabled: true, cues: [gaze, nod, posture, face_affect]}
+
+features:
+  linguistics:
+    units: [utterance, turn, repair]
+    semantics: [topic, intent, sentiment, uncertainty]
+    pragmatics: [politeness, formality, implicature]
+  timing:
+    pause_ms: true
+    overlap_ratio: true     # かぶり率（同時発話）
+    turn_latency_ms: true
+  rapport:
+    backchannel_rate: true  # あいづち頻度
+    alignment: true         # 語彙/リズムのミラーリング
+
+mappings:
+  to_layers:
+    Genesys.latent_keys:
+      - conversation_goal        # 合意形成/雑談/意思決定/学習など
+      - safety_policies          # NGワード/地雷テーマ/優先度
+      - persona_constraints      # 話者のキャラ設定
+    Stillness.state:
+      baseline: "listener_silence_quality"   # 静けさ=聴きの質
+      tension: "topic_risk - trust_buffer"
+    Motion.state.control:
+      intent_v: "turn_take_probability"      # 次に話すかの意図
+      intent_w: "topic_shift_direction"      # テーマ移動の向き
+    Coherence.state.score:
+      "= consistency(goal, topic_flow, timing)"
+
+policies:
+  default_policy:
+    objective: "maximize(coherence) + alpha*rapport + beta*task_success"
+    alpha: 0.4
+    beta: 0.6
+    constraints:
+      - respect_turns: true
+      - max_overlap_ratio: 0.15
+      - safety_guardrails: true
+  repair_strategy:
+    triggers: [misunderstanding, uncertainty_high, affect_drop]
+    actions: [clarify_question, rephrase, summarize, slow_down]
+
+responsibility_vector:
+  components: [magnitude, topic_theta, social_phi]
+  metadata: [speaker_id, listener_id, scope: turn|episode, timescale]
+  ops:
+    project: "to_shared_goal_axis"
+    rotate: "by_empathy(affect_state)"
+  constraints:
+    conservation_like:
+      enabled: true
+      max_total: 1.0   # “場”の総責任を1.0に正規化（配分を意識）
+
+nori_entropy:
+  measures:
+    H_topic: true         # 話題分布のエントロピー
+    H_pause: true         # 間(ま)の分布
+    H_alignment_to_R: true
+  invariants:
+    min_coherence_time_sec: 2.0
+    keep_pause_to_speech_ratio: 0.2
+  control_knobs:
+    beta: 1.1             # 会話は少し高温（探索的）
+    stiffness: 0.25
+
+metrics:
+  rapport_index:
+    formula: "w1*backchannel_rate + w2*alignment + w3*politeness_match"
+    weights: {w1: 0.35, w2: 0.45, w3: 0.20}
+  clarity_index:
+    formula: "1 - repair_frequency_norm"
+  turn_fairness:
+    formula: "1 - gini(turn_durations)"
+
+logging:
+  events:
+    - name: turn_event
+      fields: [t, speaker_id, duration_ms, overlap_ratio]
+    - name: repair_event
+      fields: [t, trigger, action]
+    - name: affect_update
+      fields: [t, sentiment, arousal, valence]

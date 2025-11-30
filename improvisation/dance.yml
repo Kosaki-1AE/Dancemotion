@@ -1,0 +1,125 @@
+version: 0.3
+name: y_theory_dance_ext
+extends: y_theory_core
+
+context:
+  scene: "solo_showcase"   # solo_showcase / battle / team_piece
+  bpm: 96
+  style_mix: ["animation", "pop", "house"]
+  stage_constraints: ["2.5m square", "120s timecap"]
+
+sensors:
+  audio:
+    source: "wav|linein"
+    features:
+      tempo: Hz
+      beat_positions: s
+      onset_strength: au
+      spectral_flux: au
+  pose:
+    source: "mediapipe|rtmpose|mocopi|openpose"
+    features:
+      velocity: m/s
+      angular_vel: rad/s
+      jerk: m/s^3
+      freeze_ratio: [0,1]
+      symmetry: [0,1]
+      transition_rate: Hz
+  imu:
+    source: "waist|ankle"
+    features:
+      accel_rms: m/s^2
+      gyro_rms: rad/s
+
+features_to_metrics:
+  timing_error_ms:
+    definition: "beat_position vs motion_peak"
+    compute: "abs(peak_time - nearest_beat)*1000"
+  stillness_in_motion:
+    definition: "freeze_ratio corrected by micro_fluct quality"
+    formula: "freeze_ratio · (1 - jerk_norm) · (1 - noise)"
+  motion_energy:
+    formula: "norm(velocity) + λ·accel_rms"
+  coherence_score:
+    sources: ["audio.tempo", "pose.transition_rate", "phase(audio↔pose)"]
+    compute: "phase_lock_index"
+  flow_continuity:
+    compute: "1 - (count(hard_stops)/duration)"
+  responsibility_allocation:
+    axes: ["self", "other", "system"]
+    mapping:
+      self: "solo choice / risk-taking / originality"
+      other: "観客への配慮・可読性・コール&レスポンス"
+      system: "舞台進行/ルール/チーム役割への整合"
+
+layer_updates:
+  genesys:
+    priors:
+      motif_bank: ["wave→isolation→freeze", "glide→angle→hit"]
+      risk_budget: 0.35
+      readability_target: 0.6
+    triggers:
+      - when: "coherence_score > 0.7 and timing_error_ms < 40"
+        do: "unlock next motif; increase risk_budget by 0.05 (clip 0.6)"
+  stillness:
+    target_coherence_time: { value: 1.2, unit: s }
+    control:
+      - when: "motion_energy high ∧ freeze_ratio low"
+        do: "insert breath-gap 0.3s; reduce jerk via smoothing"
+  motion:
+    controller: "beat-synced"
+    params:
+      amplitude: "adapt from audio.onset_strength"
+      tempo_follow: true
+      micro_offset: "−15 to +30 ms for groove"
+  coherence:
+    alignment:
+      crossmodal_delay_ms: 20
+      entrain:
+        strategy: "PLV (phase locking value) feedback"
+        gain: 0.8
+
+responsibility_vector:
+  axes: ["self", "other", "system"]
+  compute:
+    self:   "novelty_score · risk_budget"
+    other:  "readability_target · call_response_rate"
+    system: "rule_conformance · team_sync"
+  metrics:
+    accountability_score: "weighted sum with context weights"
+
+nori_entropy:
+  window: { length: 8, unit: s }
+  compute:
+    base: "Shannon(audio_features ∪ pose_features)"
+    coherence_gain: "k1·coherence_score"
+    alignment_bonus: "k2·(accountability_score)"
+  parameters:
+    k1: 0.4
+    k2: 0.3
+  hypotheses:
+    - "dM/dt ≈ dE_n/dt が正のとき、展開（見せ場）フェーズへ"
+    - "E*_window が安定なら構成の“芯”が取れている"
+
+presets:
+  animation_focus:
+    readability_target: 0.75
+    risk_budget: 0.25
+    micro_offset_ms: [-5, +20]
+  powermove_focus:
+    readability_target: 0.55
+    risk_budget: 0.5
+    micro_offset_ms: [-10, +30]
+
+logging:
+  rate_hz: 30
+  to: "logs/dance_run_{timestamp}.jsonl"
+  fields:
+    - time
+    - metrics.timing_error_ms
+    - metrics.stillness_in_motion
+    - metrics.coherence_score
+    - metrics.motion_energy
+    - R.axes
+    - E_n
+    - layers.states
