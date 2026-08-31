@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>自動保存フォーム</title>
+</head>
+<body>
+    <h1>メモ・画像・動画 自動保存</h1>
+    <form method="POST" enctype="multipart/form-data">
+        <textarea name="text" rows="3" cols="50" placeholder="メモを書く…"></textarea><br>
+        <input type="file" name="file" accept="image/*,video/*"><br>
+        <button type="submit">保存する</button>
+    </form>
+
+    <h2>アップロード一覧</h2>
+    <ul>
+        {% for log in logs %}
+        <li>
+            🕒 <strong>{{ log.time }}</strong><br>
+            📝 {{ log.text }}<br>
+
+            {% if log.filename != 'なし' %}
+                📎 <a href="{{ url_for('uploaded_file', filename=log.filename) }}" target="_blank">{{ log.filename }}</a><br>
+
+                {% set ext = log.filename.lower() %}
+                {% if ext.endswith('.jpg') or ext.endswith('.jpeg') or ext.endswith('.png') or ext.endswith('.gif') %}
+                    <img src="{{ url_for('uploaded_file', filename=log.filename) }}" width="200" alt="画像"><br>
+                {% elif ext.endswith('.mp4') or ext.endswith('.mov') or ext.endswith('.avi') %}
+                    <video src="{{ url_for('uploaded_file', filename=log.filename) }}" width="300" controls></video><br>
+                {% endif %}
+            {% endif %}
+
+            <a href="{{ url_for('delete_entry', entry_id=log.id) }}" style="color: red;">[削除]</a>
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

@@ -1,0 +1,3 @@
+/mnt/c/Users/kos04/Downloads/madebyGPT/kos3d_viewer/kos3d_viewer/CMakeFiles/kos3d.dir
+/mnt/c/Users/kos04/Downloads/madebyGPT/kos3d_viewer/kos3d_viewer/CMakeFiles/edit_cache.dir
+/mnt/c/Users/kos04/Downloads/madebyGPT/kos3d_viewer/kos3d_viewer/CMakeFiles/rebuild_cache.dir
