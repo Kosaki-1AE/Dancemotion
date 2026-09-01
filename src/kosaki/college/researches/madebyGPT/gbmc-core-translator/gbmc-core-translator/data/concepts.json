@@ -1,0 +1,25 @@
+{
+  "mappings": [
+    {
+      "source_domain": "Transformer",
+      "source_concept": "Attention",
+      "gbmc_concept": "Port",
+      "confidence": 0.72,
+      "reason": "Attention mediates which information can connect to the next representation."
+    },
+    {
+      "source_domain": "ControlTheory",
+      "source_concept": "Observer",
+      "gbmc_concept": "Translator",
+      "confidence": 0.68,
+      "reason": "An observer translates measured state into an internal estimate."
+    },
+    {
+      "source_domain": "StreetDance",
+      "source_concept": "Groove",
+      "gbmc_concept": "Resonance",
+      "confidence": 0.81,
+      "reason": "Groove emerges when body, rhythm, and space transition together."
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+<html>
+    <script>
+        function js_alert() {
+            alert("Pushed!");
+        }
+    </script>
+    <body>
+        <a href="#" onclick="js_alert()">ボタン</a>
+    </body>
+</html>

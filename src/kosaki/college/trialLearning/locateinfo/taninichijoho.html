@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <title>位置情報の取得</title>
+    <script>
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    successCallback, 
+                    errorCallback
+                );
+            } else {
+                alert("お使いのブラウザはジオロケーションをサポートしていません。");
+            }
+        }
+        
+        function successCallback(position) {
+            var latitude = position.coords.latitude;
+            var longitude = position.coords.longitude;
+            alert("緯度: " + latitude + ", 経度: " + longitude);
+        }
+        
+        function errorCallback(error) {
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    alert("位置情報の取得が許可されていません。");
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    alert("位置情報が利用できません。");
+                    break;
+                case error.TIMEOUT:
+                    alert("タイムアウトしました。");
+                    break;
+                case error.UNKNOWN_ERROR:
+                    alert("不明なエラーが発生しました。");
+                    break;
+            }
+        }
+    </script>
+</head>
+<body>
+    <button onclick="getLocation()">位置情報を取得する</button>
+</body>
+</html>

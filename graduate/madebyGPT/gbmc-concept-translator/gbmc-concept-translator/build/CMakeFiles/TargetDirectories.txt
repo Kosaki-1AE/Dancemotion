@@ -1,3 +1,0 @@
-/mnt/c/Users/kos04/Downloads/gbmc-concept-translator/gbmc-concept-translator/build/CMakeFiles/gbmc_translate.dir
-/mnt/c/Users/kos04/Downloads/gbmc-concept-translator/gbmc-concept-translator/build/CMakeFiles/edit_cache.dir
-/mnt/c/Users/kos04/Downloads/gbmc-concept-translator/gbmc-concept-translator/build/CMakeFiles/rebuild_cache.dir

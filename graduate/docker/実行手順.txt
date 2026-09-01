@@ -1,6 +1,0 @@
-# ビルド(Dockerfileがあるディレクトリ内で実行してください)
-docker buildx build .
-docker build -t auto-saver .
-
-# 逐一
-docker run -p 5000:5000 -v C:\Users\kos04\Documents\docker\static\uploads:/app/static/uploads -v C:\Users\kos04\Documents\docker\saved_data:/app/saved_data auto-saver

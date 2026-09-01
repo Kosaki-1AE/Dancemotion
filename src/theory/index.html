@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LifeGame & Minesweeper (Browser)</title>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans JP", sans-serif;
+      background: #0b0f14; color: #e8eef6;
+    }
+    header {
+      padding: 16px 18px; border-bottom: 1px solid #1d2633;
+      display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+    }
+    header h1 { font-size: 16px; margin: 0; font-weight: 700; }
+    .tabs { display: flex; gap: 8px; }
+    .tab {
+      border: 1px solid #283548; background: #101826; color: #e8eef6;
+      padding: 8px 10px; border-radius: 10px; cursor: pointer;
+      user-select: none;
+    }
+    .tab.active { background: #1a2a45; border-color: #3b547a; }
+    main { padding: 16px 18px; display: grid; gap: 12px; }
+    .panel {
+      border: 1px solid #1d2633; background: #0f1622; border-radius: 14px;
+      padding: 12px;
+    }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    label { display: inline-flex; gap: 8px; align-items: center; font-size: 13px; color: #bcd0ea; }
+    input[type="number"], input[type="range"] {
+      accent-color: #8fb7ff;
+    }
+    input[type="number"]{
+      width: 92px; padding: 6px 8px; border-radius: 10px;
+      border: 1px solid #283548; background: #0b1220; color: #e8eef6;
+    }
+    button {
+      padding: 8px 10px; border-radius: 10px; border: 1px solid #283548;
+      background: #101826; color: #e8eef6; cursor: pointer;
+    }
+    button:hover { background: #16243a; }
+    canvas {
+      width: 100%;
+      max-width: 900px;
+      border-radius: 12px;
+      border: 1px solid #283548;
+      background: #070a10;
+      image-rendering: pixelated;
+      display: block;
+    }
+    .hint { font-size: 12px; color: #9fb2cf; line-height: 1.5; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .hidden { display: none; }
+    .badge { font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid #283548; color:#bcd0ea;}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>LifeGame & Minesweeper <span class="badge">browser build</span></h1>
+    <div class="tabs">
+      <div id="tabLife" class="tab active">LifeGame</div>
+      <div id="tabMine" class="tab">Minesweeper</div>
+    </div>
+  </header>
+
+  <main>
+    <!-- LifeGame -->
+    <section id="lifeSection" class="panel">
+      <div class="row" style="justify-content: space-between;">
+        <div class="row">
+          <button id="lifePlay">⏯ Play/Pause</button>
+          <button id="lifeStep">▶ Step</button>
+          <button id="lifeClear">🧼 Clear</button>
+          <button id="lifeRandom">🎲 Random</button>
+        </div>
+        <div class="row">
+          <label>H <input id="lifeH" type="number" min="5" max="200" value="20"></label>
+          <label>W <input id="lifeW" type="number" min="5" max="300" value="40"></label>
+          <button id="lifeResize">↔ Resize</button>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top: 10px;">
+        <label>Speed(ms)
+          <input id="lifeSpeed" type="range" min="10" max="400" value="150">
+          <span id="lifeSpeedText" class="mono">150</span>
+        </label>
+        <div class="hint">クリックでセルをON/OFF。元の `lifegame.py` は <span class="mono">20×40</span> グリッドで <span class="mono">0.15s</span> ごとに更新してたので、それに合わせてる。 </div>
+      </div>
+
+      <canvas id="lifeCanvas" width="800" height="400"></canvas>
+      <div class="hint">
+        ルール：生=隣接2〜3で生存、過疎/過密で死。死=隣接3で誕生（Conway’s Game of Life）。 :contentReference[oaicite:2]{index=2}
+      </div>
+    </section>
+
+    <!-- Minesweeper -->
+    <section id="mineSection" class="panel hidden">
+      <div class="row" style="justify-content: space-between;">
+        <div class="row">
+          <button id="mineNew">🧨 New Game</button>
+          <button id="mineRevealAll">👁 Reveal (debug)</button>
+        </div>
+        <div class="row">
+          <label>H <input id="mineH" type="number" min="5" max="50" value="10"></label>
+          <label>W <input id="mineW" type="number" min="5" max="50" value="10"></label>
+          <label>Mines <input id="mineM" type="number" min="1" max="2000" value="15"></label>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top: 10px;">
+        <div class="hint">
+          左クリック：開く / 右クリック：旗 🚩（コンテキストメニュー無効化済）<br>
+          元の `minesweeper.py` は <span class="mono">open (row col)</span> を入力してたけど、ブラウザだとクリック操作に変更。爆発したら「💥 BOOM（責任発生）」も出す。 :contentReference[oaicite:3]{index=3}
+        </div>
+        <div id="mineStatus" class="mono" style="margin-left:auto; color:#bcd0ea;"></div>
+      </div>
+
+      <canvas id="mineCanvas" width="600" height="600"></canvas>
+      <div class="hint">数字は周囲8マスの地雷数。0は連鎖的に自動で開く仕様にしてある（遊びやすさUP）。</div>
+    </section>
+  </main>
+
+  <script>
+    // =========================
+    // Tabs
+    // =========================
+    const tabLife = document.getElementById("tabLife");
+    const tabMine = document.getElementById("tabMine");
+    const lifeSection = document.getElementById("lifeSection");
+    const mineSection = document.getElementById("mineSection");
+
+    function show(which){
+      const isLife = which === "life";
+      tabLife.classList.toggle("active", isLife);
+      tabMine.classList.toggle("active", !isLife);
+      lifeSection.classList.toggle("hidden", !isLife);
+      mineSection.classList.toggle("hidden", isLife);
+    }
+    tabLife.addEventListener("click", () => show("life"));
+    tabMine.addEventListener("click", () => show("mine"));
+
+    // =========================
+    // LifeGame (based on lifegame.py logic)
+    // =========================
+    const lifeCanvas = document.getElementById("lifeCanvas");
+    const lifeCtx = lifeCanvas.getContext("2d");
+
+    let lifeH = 20, lifeW = 40;
+    let lifeGrid = makeLifeGrid(lifeH, lifeW, true);
+    let lifeRunning = true;
+    let lifeTimer = null;
+    let lifeDelay = 150;
+
+    function makeLifeGrid(h, w, randomize=false){
+      const g = new Array(h);
+      for(let i=0;i<h;i++){
+        g[i] = new Array(w).fill(0);
+      }
+      if(randomize){
+        for(let i=0;i<h;i++){
+          for(let j=0;j<w;j++){
+            g[i][j] = Math.random() < 0.5 ? 1 : 0;
+          }
+        }
+      }
+      return g;
+    }
+
+    function lifeStepOnce(){
+      const newG = makeLifeGrid(lifeH, lifeW, false);
+      for(let i=0;i<lifeH;i++){
+        for(let j=0;j<lifeW;j++){
+          let neighbors = 0;
+          for(let di=-1; di<=1; di++){
+            for(let dj=-1; dj<=1; dj++){
+              if(di===0 && dj===0) continue;
+              const ni = i + di, nj = j + dj;
+              if(0 <= ni && ni < lifeH && 0 <= nj && nj < lifeW){
+                neighbors += lifeGrid[ni][nj];
+              }
+            }
+          }
+          const cell = lifeGrid[i][j];
+          if(cell === 1 && (neighbors < 2 || neighbors > 3)) newG[i][j] = 0;
+          else if(cell === 0 && neighbors === 3) newG[i][j] = 1;
+          else newG[i][j] = cell;
+        }
+      }
+      lifeGrid = newG;
+      drawLife();
+    }
+
+    function drawLife(){
+      // Resize canvas resolution for crisp pixels
+      const rect = lifeCanvas.getBoundingClientRect();
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      lifeCanvas.width = Math.floor(rect.width * dpr);
+      lifeCanvas.height = Math.floor((rect.width * (lifeH / lifeW)) * dpr);
+      lifeCtx.setTransform(1,0,0,1,0,0);
+      lifeCtx.scale(dpr, dpr);
+
+      const w = rect.width;
+      const h = rect.width * (lifeH / lifeW);
+      const cellW = w / lifeW;
+      const cellH = h / lifeH;
+
+      // background
+      lifeCtx.clearRect(0,0,w,h);
+
+      // grid cells
+      for(let i=0;i<lifeH;i++){
+        for(let j=0;j<lifeW;j++){
+          if(lifeGrid[i][j] === 1){
+            lifeCtx.fillRect(j*cellW, i*cellH, cellW, cellH);
+          }
+        }
+      }
+
+      // light grid lines (optional subtle)
+      lifeCtx.globalAlpha = 0.12;
+      for(let j=0;j<=lifeW;j++){
+        lifeCtx.fillRect(j*cellW, 0, 1, h);
+      }
+      for(let i=0;i<=lifeH;i++){
+        lifeCtx.fillRect(0, i*cellH, w, 1);
+      }
+      lifeCtx.globalAlpha = 1;
+    }
+
+    function lifeStartLoop(){
+      if(lifeTimer) clearInterval(lifeTimer);
+      lifeTimer = setInterval(() => {
+        if(lifeRunning) lifeStepOnce();
+      }, lifeDelay);
+    }
+
+    // interactions
+    lifeCanvas.addEventListener("click", (e) => {
+      const rect = lifeCanvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const j = Math.floor(x / (rect.width / lifeW));
+      const i = Math.floor(y / ((rect.width * (lifeH / lifeW)) / lifeH));
+      if(0 <= i && i < lifeH && 0 <= j && j < lifeW){
+        lifeGrid[i][j] = lifeGrid[i][j] ? 0 : 1;
+        drawLife();
+      }
+    });
+
+    document.getElementById("lifePlay").addEventListener("click", () => {
+      lifeRunning = !lifeRunning;
+    });
+    document.getElementById("lifeStep").addEventListener("click", () => lifeStepOnce());
+    document.getElementById("lifeClear").addEventListener("click", () => { lifeGrid = makeLifeGrid(lifeH, lifeW, false); drawLife(); });
+    document.getElementById("lifeRandom").addEventListener("click", () => { lifeGrid = makeLifeGrid(lifeH, lifeW, true); drawLife(); });
+
+    document.getElementById("lifeResize").addEventListener("click", () => {
+      const nh = clampInt(document.getElementById("lifeH").value, 5, 200);
+      const nw = clampInt(document.getElementById("lifeW").value, 5, 300);
+      lifeH = nh; lifeW = nw;
+      lifeGrid = makeLifeGrid(lifeH, lifeW, true);
+      drawLife();
+    });
+
+    const lifeSpeed = document.getElementById("lifeSpeed");
+    const lifeSpeedText = document.getElementById("lifeSpeedText");
+    lifeSpeed.addEventListener("input", () => {
+      lifeDelay = parseInt(lifeSpeed.value, 10);
+      lifeSpeedText.textContent = String(lifeDelay);
+      lifeStartLoop();
+    });
+
+    // =========================
+    // Minesweeper (based on minesweeper.py spirit)
+    // =========================
+    const mineCanvas = document.getElementById("mineCanvas");
+    const mineCtx = mineCanvas.getContext("2d");
+    const mineStatus = document.getElementById("mineStatus");
+
+    let mineH = 10, mineW = 10, mineMines = 15;
+    let mineField = [];   // -1 mine, else number
+    let mineVisible = []; // opened
+    let mineFlag = [];    // flagged
+    let mineGameOver = false;
+    let mineWin = false;
+
+    function initMine(){
+      mineH = clampInt(document.getElementById("mineH").value, 5, 50);
+      mineW = clampInt(document.getElementById("mineW").value, 5, 50);
+      mineMines = clampInt(document.getElementById("mineM").value, 1, Math.max(1, mineH*mineW - 1));
+
+      mineField = Array.from({length: mineH}, () => Array(mineW).fill(0));
+      mineVisible = Array.from({length: mineH}, () => Array(mineW).fill(false));
+      mineFlag = Array.from({length: mineH}, () => Array(mineW).fill(false));
+      mineGameOver = false;
+      mineWin = false;
+
+      // place mines
+      const cells = [];
+      for(let i=0;i<mineH;i++) for(let j=0;j<mineW;j++) cells.push([i,j]);
+      shuffle(cells);
+      const mines = new Set(cells.slice(0, mineMines).map(([i,j]) => i + "," + j));
+
+      for(let i=0;i<mineH;i++){
+        for(let j=0;j<mineW;j++){
+          if(mines.has(i + "," + j)){
+            mineField[i][j] = -1;
+            continue;
+          }
+          let cnt = 0;
+          for(let di=-1; di<=1; di++){
+            for(let dj=-1; dj<=1; dj++){
+              if(di===0 && dj===0) continue;
+              const ni=i+di, nj=j+dj;
+              if(0<=ni && ni<mineH && 0<=nj && nj<mineW){
+                if(mines.has(ni + "," + nj)) cnt++;
+              }
+            }
+          }
+          mineField[i][j] = cnt;
+        }
+      }
+
+      drawMine();
+      updateMineStatus();
+    }
+
+    function updateMineStatus(msg=""){
+      const total = mineH * mineW;
+      const opened = mineVisible.flat().filter(Boolean).length;
+      const flagged = mineFlag.flat().filter(Boolean).length;
+      let s = `opened ${opened}/${total - mineMines} | flags ${flagged}/${mineMines}`;
+      if(msg) s += " | " + msg;
+      mineStatus.textContent = s;
+    }
+
+    function revealAll(){
+      for(let i=0;i<mineH;i++) for(let j=0;j<mineW;j++) mineVisible[i][j] = true;
+      drawMine();
+    }
+
+    function inBounds(i,j){ return 0<=i && i<mineH && 0<=j && j<mineW; }
+
+    function floodOpen(si, sj){
+      const q = [[si,sj]];
+      const seen = new Set([si + "," + sj]);
+      while(q.length){
+        const [i,j] = q.shift();
+        mineVisible[i][j] = true;
+        if(mineField[i][j] !== 0) continue;
+
+        for(let di=-1; di<=1; di++){
+          for(let dj=-1; dj<=1; dj++){
+            const ni=i+di, nj=j+dj;
+            if(!inBounds(ni,nj)) continue;
+            const key = ni + "," + nj;
+            if(seen.has(key)) continue;
+            if(mineFlag[ni][nj]) continue;
+            seen.add(key);
+            // open neighbors too
+            q.push([ni,nj]);
+          }
+        }
+      }
+    }
+
+    function checkWin(){
+      // win if all non-mine cells opened
+      for(let i=0;i<mineH;i++){
+        for(let j=0;j<mineW;j++){
+          if(mineField[i][j] !== -1 && !mineVisible[i][j]) return false;
+        }
+      }
+      return true;
+    }
+
+    function drawMine(){
+      // Canvas resolution
+      const rect = mineCanvas.getBoundingClientRect();
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      mineCanvas.width = Math.floor(rect.width * dpr);
+      mineCanvas.height = Math.floor(rect.width * dpr); // square
+      mineCtx.setTransform(1,0,0,1,0,0);
+      mineCtx.scale(dpr, dpr);
+
+      const size = rect.width;
+      const cell = size / mineW;
+      const cellH = size / mineH;
+
+      mineCtx.clearRect(0,0,size,size);
+
+      // draw cells
+      for(let i=0;i<mineH;i++){
+        for(let j=0;j<mineW;j++){
+          const x = j*cell;
+          const y = i*cellH;
+
+          // cell base
+          if(mineVisible[i][j]){
+            mineCtx.globalAlpha = 1;
+            mineCtx.fillRect(x, y, cell, cellH);
+            mineCtx.globalAlpha = 0.20;
+            mineCtx.fillRect(x, y, cell, cellH);
+            mineCtx.globalAlpha = 1;
+
+            if(mineField[i][j] === -1){
+              // mine
+              mineCtx.font = `${Math.floor(cellH*0.6)}px system-ui`;
+              mineCtx.textAlign = "center";
+              mineCtx.textBaseline = "middle";
+              mineCtx.fillText("💣", x+cell/2, y+cellH/2);
+            } else if(mineField[i][j] > 0){
+              mineCtx.font = `${Math.floor(cellH*0.55)}px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`;
+              mineCtx.textAlign = "center";
+              mineCtx.textBaseline = "middle";
+              mineCtx.fillText(String(mineField[i][j]), x+cell/2, y+cellH/2);
+            }
+          } else {
+            // hidden
+            mineCtx.globalAlpha = 0.10;
+            mineCtx.fillRect(x, y, cell, cellH);
+            mineCtx.globalAlpha = 1;
+
+            if(mineFlag[i][j]){
+              mineCtx.font = `${Math.floor(cellH*0.6)}px system-ui`;
+              mineCtx.textAlign = "center";
+              mineCtx.textBaseline = "middle";
+              mineCtx.fillText("🚩", x+cell/2, y+cellH/2);
+            }
+          }
+
+          // grid lines
+          mineCtx.globalAlpha = 0.25;
+          mineCtx.fillRect(x, y, 1, cellH);
+          mineCtx.fillRect(x, y, cell, 1);
+          mineCtx.globalAlpha = 1;
+        }
+      }
+      // border
+      mineCtx.globalAlpha = 0.35;
+      mineCtx.strokeRect(0,0,size,size);
+      mineCtx.globalAlpha = 1;
+
+      if(mineGameOver){
+        mineCtx.globalAlpha = 0.75;
+        mineCtx.fillRect(0, size*0.40, size, size*0.20);
+        mineCtx.globalAlpha = 1;
+        mineCtx.font = `${Math.floor(size*0.05)}px system-ui`;
+        mineCtx.textAlign = "center";
+        mineCtx.textBaseline = "middle";
+        const text = mineWin ? "✅ CLEAR（責任回収）" : "💥 BOOM（責任発生）";
+        mineCtx.fillText(text, size/2, size/2);
+      }
+    }
+
+    mineCanvas.addEventListener("contextmenu", (e) => e.preventDefault());
+
+    mineCanvas.addEventListener("mousedown", (e) => {
+      if(mineGameOver) return;
+
+      const rect = mineCanvas.getBoundingClientRect();
+      const size = rect.width;
+      const cell = size / mineW;
+      const cellH = size / mineH;
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const j = Math.floor(x / cell);
+      const i = Math.floor(y / cellH);
+      if(!inBounds(i,j)) return;
+
+      if(e.button === 2){ // right click = flag
+        if(mineVisible[i][j]) return;
+        mineFlag[i][j] = !mineFlag[i][j];
+        drawMine();
+        updateMineStatus();
+        return;
+      }
+
+      // left click = open
+      if(mineFlag[i][j]) return;
+      if(mineVisible[i][j]) return;
+
+      if(mineField[i][j] === -1){
+        mineVisible[i][j] = true;
+        mineGameOver = true;
+        mineWin = false;
+        revealAll();
+        drawMine();
+        updateMineStatus("BOOM");
+        return;
+      }
+
+      if(mineField[i][j] === 0){
+        floodOpen(i,j);
+      } else {
+        mineVisible[i][j] = true;
+      }
+
+      if(checkWin()){
+        mineGameOver = true;
+        mineWin = true;
+        revealAll();
+        drawMine();
+        updateMineStatus("CLEAR");
+        return;
+      }
+
+      drawMine();
+      updateMineStatus();
+    });
+
+    document.getElementById("mineNew").addEventListener("click", initMine);
+    document.getElementById("mineRevealAll").addEventListener("click", () => { revealAll(); updateMineStatus("debug"); });
+
+    // =========================
+    // Utils
+    // =========================
+    function clampInt(v, lo, hi){
+      const n = parseInt(v, 10);
+      if(Number.isNaN(n)) return lo;
+      return Math.max(lo, Math.min(hi, n));
+    }
+    function shuffle(arr){
+      for(let i=arr.length-1; i>0; i--){
+        const j = Math.floor(Math.random() * (i+1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    }
+
+    // boot
+    window.addEventListener("resize", () => { drawLife(); drawMine(); });
+    drawLife();
+    lifeStartLoop();
+    initMine();
+  </script>
+</body>
+</html>

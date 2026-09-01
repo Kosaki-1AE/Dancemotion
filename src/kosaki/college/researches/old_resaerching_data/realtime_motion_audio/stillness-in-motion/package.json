@@ -1,0 +1,16 @@
+{
+  "name": "stillness-in-motion",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "vite"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "stillness-in-motion": "file:"
+  },
+  "devDependencies": {
+    "vite": "^4.4.0"
+  }
+}

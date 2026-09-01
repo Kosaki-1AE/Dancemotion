@@ -1,0 +1,74 @@
+総合解釈: 最良スコア傾向の手法は kmeans。全ランで頻出した特徴の山は time_l2 / time_maxabs / time_deviation / time_mean / balance_t_minus_f / time_std / balance_t_minus_s / total_deviation_l1。合意クラスタの要点は クラスタ0=時間偏差(T=45.963, S=0.222, F=0.353, R=11.216) | クラスタ1=時間偏差(T=71.444, S=0.526, F=0.197, R=15.366) | クラスタ2=時間偏差(T=52.067, S=0.437, F=0.337, R=8.893) | クラスタ3=時間偏差(T=26.797, S=0.332, F=0.424, R=7.124) | クラスタ4=時間偏差(T=59.610, S=0.420, F=0.388, R=15.588)。つまり、このデータ群は時間・空間・力学の偏差と、それらの関係偏差を軸にいくつかの安定した型へ分かれていると解釈できる。
+
+=== Top feature peaks ===
+- time_l2: count=64, mean_abs_delta=488.5774
+- time_maxabs: count=64, mean_abs_delta=348.7932
+- time_deviation: count=64, mean_abs_delta=115.6234
+- time_mean: count=64, mean_abs_delta=115.6233
+- balance_t_minus_f: count=64, mean_abs_delta=115.6202
+- time_std: count=63, mean_abs_delta=180.8859
+- balance_t_minus_s: count=63, mean_abs_delta=117.4151
+- total_deviation_l1: count=60, mean_abs_delta=102.9489
+- total_deviation_l2: count=60, mean_abs_delta=102.9441
+- time_force_relation: count=55, mean_abs_delta=4.5745
+- space_l2: count=8, mean_abs_delta=1.8223
+- time_space_relation: count=6, mean_abs_delta=7.9808
+- space_maxabs: count=5, mean_abs_delta=1.4629
+
+=== Consensus clusters ===
+Cluster 0 size=437 ratio=0.185 spread=144.7747
+  * time_l2 | delta=123.7588 (cluster_mean=5306.2231, global_mean=5182.4644)
+  * time_maxabs | delta=91.5583 (cluster_mean=3921.8403, global_mean=3830.2820)
+  * time_std | delta=45.1744 (cluster_mean=1905.1964, global_mean=1860.0220)
+  * time_mean | delta=29.2416 (cluster_mean=1291.2289, global_mean=1261.9873)
+  * time_deviation | delta=29.2411 (cluster_mean=29.2411, global_mean=-0.0000)
+
+Cluster 1 size=214 ratio=0.090 spread=134.1878
+  * time_l2 | delta=-194.6943 (cluster_mean=4987.7700, global_mean=5182.4644)
+  * time_maxabs | delta=-139.0437 (cluster_mean=3691.2383, global_mean=3830.2820)
+  * time_std | delta=-70.9393 (cluster_mean=1789.0826, global_mean=1860.0220)
+  * time_deviation | delta=-46.1428 (cluster_mean=-46.1428, global_mean=-0.0000)
+  * time_mean | delta=-46.1415 (cluster_mean=1215.8458, global_mean=1261.9873)
+
+Cluster 2 size=391 ratio=0.165 spread=155.2036
+  * time_l2 | delta=-141.6548 (cluster_mean=5040.8096, global_mean=5182.4644)
+  * time_maxabs | delta=-100.4758 (cluster_mean=3729.8062, global_mean=3830.2820)
+  * time_std | delta=-51.2661 (cluster_mean=1808.7559, global_mean=1860.0220)
+  * balance_t_minus_s | delta=-34.0058 (cluster_mean=-34.0059, global_mean=-0.0000)
+  * time_deviation | delta=-34.0016 (cluster_mean=-34.0016, global_mean=-0.0000)
+
+Cluster 3 size=396 ratio=0.167 spread=139.5321
+  * time_l2 | delta=-72.3818 (cluster_mean=5110.0825, global_mean=5182.4644)
+  * time_maxabs | delta=-50.8550 (cluster_mean=3779.4270, global_mean=3830.2820)
+  * time_std | delta=-26.2316 (cluster_mean=1833.7904, global_mean=1860.0220)
+  * balance_t_minus_s | delta=-17.3032 (cluster_mean=-17.3032, global_mean=-0.0000)
+  * time_deviation | delta=-17.3009 (cluster_mean=-17.3009, global_mean=-0.0000)
+
+Cluster 4 size=290 ratio=0.122 spread=130.9279
+  * time_l2 | delta=156.9531 (cluster_mean=5339.4175, global_mean=5182.4644)
+  * time_maxabs | delta=124.5801 (cluster_mean=3954.8621, global_mean=3830.2820)
+  * time_std | delta=57.0233 (cluster_mean=1917.0453, global_mean=1860.0220)
+  * balance_t_minus_s | delta=37.4606 (cluster_mean=37.4606, global_mean=-0.0000)
+  * balance_t_minus_f | delta=37.4569 (cluster_mean=37.4569, global_mean=-0.0000)
+
+Cluster 5 size=255 ratio=0.108 spread=212.7782
+  * time_l2 | delta=313.7837 (cluster_mean=5496.2480, global_mean=5182.4644)
+  * time_maxabs | delta=214.1970 (cluster_mean=4044.4790, global_mean=3830.2820)
+  * total_deviation_l1 | delta=121.5583 (cluster_mean=527.5001, global_mean=405.9418)
+  * total_deviation_l2 | delta=121.5353 (cluster_mean=527.4466, global_mean=405.9113)
+  * time_std | delta=114.2155 (cluster_mean=1974.2374, global_mean=1860.0220)
+
+Cluster 6 size=226 ratio=0.095 spread=135.6547
+  * time_l2 | delta=-60.3657 (cluster_mean=5122.0986, global_mean=5182.4644)
+  * time_maxabs | delta=-45.4939 (cluster_mean=3784.7881, global_mean=3830.2820)
+  * time_std | delta=-21.9744 (cluster_mean=1838.0476, global_mean=1860.0220)
+  * time_deviation | delta=-14.3207 (cluster_mean=-14.3207, global_mean=-0.0000)
+  * time_mean | delta=-14.3202 (cluster_mean=1247.6671, global_mean=1261.9873)
+
+Cluster 7 size=159 ratio=0.067 spread=113.7636
+  * time_l2 | delta=-253.2583 (cluster_mean=4929.2061, global_mean=5182.4644)
+  * time_maxabs | delta=-196.8418 (cluster_mean=3633.4402, global_mean=3830.2820)
+  * time_std | delta=-93.2303 (cluster_mean=1766.7916, global_mean=1860.0220)
+  * total_deviation_l1 | delta=-68.9754 (cluster_mean=336.9664, global_mean=405.9418)
+  * total_deviation_l2 | delta=-68.9621 (cluster_mean=336.9492, global_mean=405.9113)
+

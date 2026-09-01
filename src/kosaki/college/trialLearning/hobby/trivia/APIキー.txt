@@ -1,0 +1,11 @@
+SHA1のフィンガプリント↓
+0A:CA:F1:4F:7C:7F:9D:43:28:EC:23:FF:E7:CF:1C:F2:5C:B0:13:C0
+
+linguyizhen63で作ったAPIキー↓
+AIzaSyDIxR5FJPFjFGfsnvjTz2FvqWXnwL7w_70
+
+openaiでの俺のAPIキー↓
+sk-proj-O83S7RCs7dQ6VQA9KKr1T3BlbkFJBqF8K6IcQcVwTu9elxpd
+
+人力飛行機GPT↓
+https://chatgpt.com/g/g-oH3lG0kTT-ren-li-fei-xing-ji-gpt
