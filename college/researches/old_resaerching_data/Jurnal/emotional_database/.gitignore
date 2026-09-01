@@ -1,0 +1,6 @@
+# .gitignore
+
+.env         # APIキーとか秘密情報
+__pycache__/ # Pythonのキャッシュ
+*.pyc        # コンパイルされた一時ファイル
+*.pyo

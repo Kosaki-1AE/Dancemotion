@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/gbmc_translator_demo.dir/src/main.cpp.o -o gbmc_translator_demo 

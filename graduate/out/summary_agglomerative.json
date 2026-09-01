@@ -1,0 +1,597 @@
+[
+  {
+    "name": "agglomerative",
+    "n_clusters_found": 8,
+    "silhouette": 0.29275068640708923,
+    "calinski_harabasz": 270.04584559413087,
+    "davies_bouldin": 1.79206225926401,
+    "ari_vs_kmeans": 0.6483730741261967,
+    "interpretation": "全体解釈: 最大勢力クラスタは 2。最もまとまりが強いクラスタは 7、最もばらつくクラスタは 4。クラスタ0は時間偏差優勢 / クラスタ1は時間偏差優勢 / クラスタ2は時間偏差優勢。主要な特徴の山として time_l2が低い / time_maxabsが低い / time_stdが低い / time_l2が低い / time_maxabsが低い / time_stdが低い / time_l2が高い / time_maxabsが高い / total_deviation_l2が低い が見られる。",
+    "cluster_summaries": [
+      {
+        "cluster_id": 0,
+        "size": 416,
+        "ratio": 0.17567567567567569,
+        "spread": 140.6470947265625,
+        "density_like": 0.007109994002172878,
+        "time_deviation_strength": 16.404253005981445,
+        "space_deviation_strength": 0.2610510289669037,
+        "force_deviation_strength": 0.4195675253868103,
+        "relation_deviation_strength": 3.0844027996063232,
+        "feature_peaks": [
+          {
+            "feature": "time_l2",
+            "cluster_mean": 5138.4287109375,
+            "global_mean": 5182.46435546875,
+            "delta": -44.03564453125
+          },
+          {
+            "feature": "time_maxabs",
+            "cluster_mean": 3799.94970703125,
+            "global_mean": 3830.281982421875,
+            "delta": -30.332275390625
+          },
+          {
+            "feature": "time_std",
+            "cluster_mean": 1844.168701171875,
+            "global_mean": 1860.02197265625,
+            "delta": -15.853271484375
+          },
+          {
+            "feature": "balance_t_minus_s",
+            "cluster_mean": -10.650800704956055,
+            "global_mean": -9.897592462948523e-06,
+            "delta": -10.65079116821289
+          },
+          {
+            "feature": "time_deviation",
+            "cluster_mean": -10.649171829223633,
+            "global_mean": -1.3196790860092733e-05,
+            "delta": -10.649158477783203
+          },
+          {
+            "feature": "time_mean",
+            "cluster_mean": 1251.339111328125,
+            "global_mean": 1261.9873046875,
+            "delta": -10.648193359375
+          },
+          {
+            "feature": "balance_t_minus_f",
+            "cluster_mean": -10.644548416137695,
+            "global_mean": -1.1547192116267979e-05,
+            "delta": -10.644536972045898
+          },
+          {
+            "feature": "time_force_relation",
+            "cluster_mean": 0.049327775835990906,
+            "global_mean": -2.7526588439941406,
+            "delta": 2.8019866943359375
+          },
+          {
+            "feature": "space_maxabs",
+            "cluster_mean": 2016.9158935546875,
+            "global_mean": 2016.2833251953125,
+            "delta": 0.632568359375
+          },
+          {
+            "feature": "space_l2",
+            "cluster_mean": 2016.91650390625,
+            "global_mean": 2016.2867431640625,
+            "delta": 0.6297607421875
+          }
+        ]
+      },
+      {
+        "cluster_id": 1,
+        "size": 330,
+        "ratio": 0.13935810810810811,
+        "spread": 129.8516845703125,
+        "density_like": 0.007701093776580972,
+        "time_deviation_strength": 178.42770385742188,
+        "space_deviation_strength": 0.6530283093452454,
+        "force_deviation_strength": 0.3752276301383972,
+        "relation_deviation_strength": 36.10670471191406,
+        "feature_peaks": [
+          {
+            "feature": "time_l2",
+            "cluster_mean": 4695.328125,
+            "global_mean": 5182.46435546875,
+            "delta": -487.13623046875
+          },
+          {
+            "feature": "time_maxabs",
+            "cluster_mean": 3482.367431640625,
+            "global_mean": 3830.281982421875,
+            "delta": -347.91455078125
+          },
+          {
+            "feature": "time_std",
+            "cluster_mean": 1683.071044921875,
+            "global_mean": 1860.02197265625,
+            "delta": -176.950927734375
+          },
+          {
+            "feature": "balance_t_minus_s",
+            "cluster_mean": -116.0831527709961,
+            "global_mean": -9.897592462948523e-06,
+            "delta": -116.08314514160156
+          },
+          {
+            "feature": "time_deviation",
+            "cluster_mean": -116.0790023803711,
+            "global_mean": -1.3196790860092733e-05,
+            "delta": -116.07898712158203
+          },
+          {
+            "feature": "time_mean",
+            "cluster_mean": 1145.908935546875,
+            "global_mean": 1261.9873046875,
+            "delta": -116.078369140625
+          },
+          {
+            "feature": "balance_t_minus_f",
+            "cluster_mean": -116.07563018798828,
+            "global_mean": -1.1547192116267979e-05,
+            "delta": -116.07561492919922
+          },
+          {
+            "feature": "total_deviation_l1",
+            "cluster_mean": 380.0135192871094,
+            "global_mean": 405.94183349609375,
+            "delta": -25.928314208984375
+          },
+          {
+            "feature": "total_deviation_l2",
+            "cluster_mean": 379.9883728027344,
+            "global_mean": 405.9112548828125,
+            "delta": -25.922882080078125
+          },
+          {
+            "feature": "time_force_relation",
+            "cluster_mean": -0.15827436745166779,
+            "global_mean": -2.7526588439941406,
+            "delta": 2.5943844318389893
+          }
+        ]
+      },
+      {
+        "cluster_id": 2,
+        "size": 525,
+        "ratio": 0.22170608108108109,
+        "spread": 135.25071716308594,
+        "density_like": 0.007393676136447089,
+        "time_deviation_strength": 39.7808837890625,
+        "space_deviation_strength": 0.13526640832424164,
+        "force_deviation_strength": 0.35793453454971313,
+        "relation_deviation_strength": 21.397769927978516,
+        "feature_peaks": [
+          {
+            "feature": "time_l2",
+            "cluster_mean": 5289.2509765625,
+            "global_mean": 5182.46435546875,
+            "delta": 106.78662109375
+          },
+          {
+            "feature": "time_maxabs",
+            "cluster_mean": 3909.4423828125,
+            "global_mean": 3830.281982421875,
+            "delta": 79.160400390625
+          },
+          {
+            "feature": "total_deviation_l2",
+            "cluster_mean": 347.2809753417969,
+            "global_mean": 405.9112548828125,
+            "delta": -58.630279541015625
+          },
+          {
+            "feature": "total_deviation_l1",
+            "cluster_mean": 347.32135009765625,
+            "global_mean": 405.94183349609375,
+            "delta": -58.6204833984375
+          },
+          {
+            "feature": "time_std",
+            "cluster_mean": 1898.6123046875,
+            "global_mean": 1860.02197265625,
+            "delta": 38.59033203125
+          },
+          {
+            "feature": "time_mean",
+            "cluster_mean": 1287.7156982421875,
+            "global_mean": 1261.9873046875,
+            "delta": 25.7283935546875
+          },
+          {
+            "feature": "time_deviation",
+            "cluster_mean": 25.727657318115234,
+            "global_mean": -1.3196790860092733e-05,
+            "delta": 25.727670669555664
+          },
+          {
+            "feature": "balance_t_minus_f",
+            "cluster_mean": 25.72660255432129,
+            "global_mean": -1.1547192116267979e-05,
+            "delta": 25.726613998413086
+          },
+          {
+            "feature": "balance_t_minus_s",
+            "cluster_mean": 25.721654891967773,
+            "global_mean": -9.897592462948523e-06,
+            "delta": 25.721664428710938
+          },
+          {
+            "feature": "time_force_relation",
+            "cluster_mean": -0.28029707074165344,
+            "global_mean": -2.7526588439941406,
+            "delta": 2.4723618030548096
+          }
+        ]
+      },
+      {
+        "cluster_id": 3,
+        "size": 218,
+        "ratio": 0.09206081081081081,
+        "spread": 137.82473754882812,
+        "density_like": 0.007255591541200411,
+        "time_deviation_strength": 21.884279251098633,
+        "space_deviation_strength": 0.17548982799053192,
+        "force_deviation_strength": 0.42167237401008606,
+        "relation_deviation_strength": 6.793705463409424,
+        "feature_peaks": [
+          {
+            "feature": "time_l2",
+            "cluster_mean": 5124.671875,
+            "global_mean": 5182.46435546875,
+            "delta": -57.79248046875
+          },
+          {
+            "feature": "time_maxabs",
+            "cluster_mean": 3786.541748046875,
+            "global_mean": 3830.281982421875,
+            "delta": -43.740234375
+          },
+          {
+            "feature": "time_std",
+            "cluster_mean": 1839.0787353515625,
+            "global_mean": 1860.02197265625,
+            "delta": -20.9432373046875
+          },
+          {
+            "feature": "time_deviation",
+            "cluster_mean": -13.835787773132324,
+            "global_mean": -1.3196790860092733e-05,
+            "delta": -13.835774421691895
+          },
+          {
+            "feature": "time_mean",
+            "cluster_mean": 1248.1522216796875,
+            "global_mean": 1261.9873046875,
+            "delta": -13.8350830078125
+          },
+          {
+            "feature": "balance_t_minus_s",
+            "cluster_mean": -13.831701278686523,
+            "global_mean": -9.897592462948523e-06,
+            "delta": -13.83169174194336
+          },
+          {
+            "feature": "balance_t_minus_f",
+            "cluster_mean": -13.831170082092285,
+            "global_mean": -1.1547192116267979e-05,
+            "delta": -13.831158638000488
+          },
+          {
+            "feature": "total_deviation_l2",
+            "cluster_mean": 417.7353820800781,
+            "global_mean": 405.9112548828125,
+            "delta": 11.824127197265625
+          },
+          {
+            "feature": "total_deviation_l1",
+            "cluster_mean": 417.7594909667969,
+            "global_mean": 405.94183349609375,
+            "delta": 11.817657470703125
+          },
+          {
+            "feature": "time_force_relation",
+            "cluster_mean": 0.06408840417861938,
+            "global_mean": -2.7526588439941406,
+            "delta": 2.8167471885681152
+          }
+        ]
+      },
+      {
+        "cluster_id": 4,
+        "size": 254,
+        "ratio": 0.10726351351351351,
+        "spread": 237.7429656982422,
+        "density_like": 0.004206223292541906,
+        "time_deviation_strength": 260.48931884765625,
+        "space_deviation_strength": 0.579508900642395,
+        "force_deviation_strength": 3.0720877647399902,
+        "relation_deviation_strength": 98.33274841308594,
+        "feature_peaks": [
+          {
+            "feature": "time_l2",
+            "cluster_mean": 5891.21484375,
+            "global_mean": 5182.46435546875,
+            "delta": 708.75048828125
+          },
+          {
+            "feature": "time_maxabs",
+            "cluster_mean": 4327.02392578125,
+            "global_mean": 3830.281982421875,
+            "delta": 496.741943359375
+          },
+          {
+            "feature": "time_std",
+            "cluster_mean": 2118.49560546875,
+            "global_mean": 1860.02197265625,
+            "delta": 258.4736328125
+          },
+          {
+            "feature": "total_deviation_l1",
+            "cluster_mean": 619.5485229492188,
+            "global_mean": 405.94183349609375,
+            "delta": 213.606689453125
+          },
+          {
+            "feature": "total_deviation_l2",
+            "cluster_mean": 619.4950561523438,
+            "global_mean": 405.9112548828125,
+            "delta": 213.58380126953125
+          },
+          {
+            "feature": "balance_t_minus_s",
+            "cluster_mean": 167.44773864746094,
+            "global_mean": -9.897592462948523e-06,
+            "delta": 167.44775390625
+          },
+          {
+            "feature": "time_mean",
+            "cluster_mean": 1429.4305419921875,
+            "global_mean": 1261.9873046875,
+            "delta": 167.4432373046875
+          },
+          {
+            "feature": "time_deviation",
+            "cluster_mean": 167.44276428222656,
+            "global_mean": -1.3196790860092733e-05,
+            "delta": 167.44277954101562
+          },
+          {
+            "feature": "balance_t_minus_f",
+            "cluster_mean": 167.41941833496094,
+            "global_mean": -1.1547192116267979e-05,
+            "delta": 167.41943359375
+          },
+          {
+            "feature": "time_force_relation",
+            "cluster_mean": -23.816450119018555,
+            "global_mean": -2.7526588439941406,
+            "delta": -21.063791275024414
+          }
+        ]
+      },
+      {
+        "cluster_id": 5,
+        "size": 209,
+        "ratio": 0.08826013513513513,
+        "spread": 135.60414123535156,
+        "density_like": 0.007374406052914549,
+        "time_deviation_strength": 72.01329040527344,
+        "space_deviation_strength": 0.5066450834274292,
+        "force_deviation_strength": 0.1927078664302826,
+        "relation_deviation_strength": 13.28951644897461,
+        "feature_peaks": [
+          {
+            "feature": "time_l2",
+            "cluster_mean": 4986.224609375,
+            "global_mean": 5182.46435546875,
+            "delta": -196.23974609375
+          },
+          {
+            "feature": "time_maxabs",
+            "cluster_mean": 3690.1435546875,
+            "global_mean": 3830.281982421875,
+            "delta": -140.138427734375
+          },
+          {
+            "feature": "time_std",
+            "cluster_mean": 1788.585205078125,
+            "global_mean": 1860.02197265625,
+            "delta": -71.436767578125
+          },
+          {
+            "feature": "time_deviation",
+            "cluster_mean": -46.594879150390625,
+            "global_mean": -1.3196790860092733e-05,
+            "delta": -46.59486770629883
+          },
+          {
+            "feature": "time_mean",
+            "cluster_mean": 1215.3936767578125,
+            "global_mean": 1261.9873046875,
+            "delta": -46.5936279296875
+          },
+          {
+            "feature": "balance_t_minus_f",
+            "cluster_mean": -46.592018127441406,
+            "global_mean": -1.1547192116267979e-05,
+            "delta": -46.59200668334961
+          },
+          {
+            "feature": "balance_t_minus_s",
+            "cluster_mean": -46.58747100830078,
+            "global_mean": -9.897592462948523e-06,
+            "delta": -46.587459564208984
+          },
+          {
+            "feature": "total_deviation_l1",
+            "cluster_mean": 400.9204406738281,
+            "global_mean": 405.94183349609375,
+            "delta": -5.021392822265625
+          },
+          {
+            "feature": "total_deviation_l2",
+            "cluster_mean": 400.8914794921875,
+            "global_mean": 405.9112548828125,
+            "delta": -5.019775390625
+          },
+          {
+            "feature": "time_space_relation",
+            "cluster_mean": 1.818696141242981,
+            "global_mean": 3.62241792678833,
+            "delta": -1.8037217855453491
+          }
+        ]
+      },
+      {
+        "cluster_id": 6,
+        "size": 262,
+        "ratio": 0.11064189189189189,
+        "spread": 130.27525329589844,
+        "density_like": 0.007676054926962273,
+        "time_deviation_strength": 52.906551361083984,
+        "space_deviation_strength": 0.39521995186805725,
+        "force_deviation_strength": 0.39065489172935486,
+        "relation_deviation_strength": 15.785863876342773,
+        "feature_peaks": [
+          {
+            "feature": "time_l2",
+            "cluster_mean": 5320.68017578125,
+            "global_mean": 5182.46435546875,
+            "delta": 138.2158203125
+          },
+          {
+            "feature": "time_maxabs",
+            "cluster_mean": 3942.320556640625,
+            "global_mean": 3830.281982421875,
+            "delta": 112.03857421875
+          },
+          {
+            "feature": "time_std",
+            "cluster_mean": 1910.201171875,
+            "global_mean": 1860.02197265625,
+            "delta": 50.17919921875
+          },
+          {
+            "feature": "balance_t_minus_s",
+            "cluster_mean": 33.04198455810547,
+            "global_mean": -9.897592462948523e-06,
+            "delta": 33.041996002197266
+          },
+          {
+            "feature": "balance_t_minus_f",
+            "cluster_mean": 33.038631439208984,
+            "global_mean": -1.1547192116267979e-05,
+            "delta": 33.03864288330078
+          },
+          {
+            "feature": "time_mean",
+            "cluster_mean": 1295.02197265625,
+            "global_mean": 1261.9873046875,
+            "delta": 33.03466796875
+          },
+          {
+            "feature": "time_deviation",
+            "cluster_mean": 33.033992767333984,
+            "global_mean": -1.3196790860092733e-05,
+            "delta": 33.03400421142578
+          },
+          {
+            "feature": "total_deviation_l1",
+            "cluster_mean": 377.75872802734375,
+            "global_mean": 405.94183349609375,
+            "delta": -28.18310546875
+          },
+          {
+            "feature": "total_deviation_l2",
+            "cluster_mean": 377.736328125,
+            "global_mean": 405.9112548828125,
+            "delta": -28.1749267578125
+          },
+          {
+            "feature": "time_force_relation",
+            "cluster_mean": -0.15301576256752014,
+            "global_mean": -2.7526588439941406,
+            "delta": 2.5996429920196533
+          }
+        ]
+      },
+      {
+        "cluster_id": 7,
+        "size": 154,
+        "ratio": 0.06503378378378379,
+        "spread": 115.37501525878906,
+        "density_like": 0.008667387802032364,
+        "time_deviation_strength": 96.43102264404297,
+        "space_deviation_strength": 0.31567832827568054,
+        "force_deviation_strength": 0.4520612061023712,
+        "relation_deviation_strength": 30.1031436920166,
+        "feature_peaks": [
+          {
+            "feature": "time_l2",
+            "cluster_mean": 4925.22705078125,
+            "global_mean": 5182.46435546875,
+            "delta": -257.2373046875
+          },
+          {
+            "feature": "time_maxabs",
+            "cluster_mean": 3630.077880859375,
+            "global_mean": 3830.281982421875,
+            "delta": -200.2041015625
+          },
+          {
+            "feature": "time_std",
+            "cluster_mean": 1765.380126953125,
+            "global_mean": 1860.02197265625,
+            "delta": -94.641845703125
+          },
+          {
+            "feature": "balance_t_minus_s",
+            "cluster_mean": -59.755340576171875,
+            "global_mean": -9.897592462948523e-06,
+            "delta": -59.75532913208008
+          },
+          {
+            "feature": "time_deviation",
+            "cluster_mean": -59.75192642211914,
+            "global_mean": -1.3196790860092733e-05,
+            "delta": -59.751914978027344
+          },
+          {
+            "feature": "time_mean",
+            "cluster_mean": 1202.23583984375,
+            "global_mean": 1261.9873046875,
+            "delta": -59.75146484375
+          },
+          {
+            "feature": "balance_t_minus_f",
+            "cluster_mean": -59.74727249145508,
+            "global_mean": -1.1547192116267979e-05,
+            "delta": -59.74726104736328
+          },
+          {
+            "feature": "total_deviation_l1",
+            "cluster_mean": 346.99383544921875,
+            "global_mean": 405.94183349609375,
+            "delta": -58.947998046875
+          },
+          {
+            "feature": "total_deviation_l2",
+            "cluster_mean": 346.97662353515625,
+            "global_mean": 405.9112548828125,
+            "delta": -58.93463134765625
+          },
+          {
+            "feature": "time_force_relation",
+            "cluster_mean": 0.2767753601074219,
+            "global_mean": -2.7526588439941406,
+            "delta": 3.0294342041015625
+          }
+        ]
+      }
+    ]
+  }
+]

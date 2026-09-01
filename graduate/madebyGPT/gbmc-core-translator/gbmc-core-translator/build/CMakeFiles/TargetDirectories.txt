@@ -1,0 +1,3 @@
+/mnt/c/Users/kos04/Downloads/gbmc-core-translator/gbmc-core-translator/build/CMakeFiles/gbmc_translator_demo.dir
+/mnt/c/Users/kos04/Downloads/gbmc-core-translator/gbmc-core-translator/build/CMakeFiles/edit_cache.dir
+/mnt/c/Users/kos04/Downloads/gbmc-core-translator/gbmc-core-translator/build/CMakeFiles/rebuild_cache.dir

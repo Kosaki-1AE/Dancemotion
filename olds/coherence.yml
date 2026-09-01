@@ -1,0 +1,133 @@
+layer:
+  name: "Coherence"
+  version: 1.0
+  role: >
+    Genesys, Stillness, Motion が生成したオブジェクト群を受け取り、
+    それらがどれだけ「筋の通った一つのシーン」として整合しているかを
+    CoherenceScore として評価する層。
+
+inputs:
+  from_layers:
+    - "Genesys"
+    - "Stillness"
+    - "Motion"
+  objects:
+    required:
+      - "SceneState"
+      - "SceneState_normalized"
+      - "StillnessField"
+      - "ResponsibilityVector"
+      - "MotionState"
+
+outputs:
+  objects:
+    - "CoherenceScore"
+  consumers:
+    - "human"
+    - "trainer"
+    - "logger"
+    - "feedback_system (optional)"
+
+objects_defined:
+  CoherenceScore:
+    purpose: >
+      Genesys・Stillness・Motion・Responsibilityの間でどれくらい「筋が通っているか」を表すスコア。
+    fields:
+      total:
+        type: "float"
+        description: "0〜1などの総合Coherenceスコア"
+      motion_fit:
+        type: "float"
+        description: "MotionStateとSceneStateの一致度"
+      responsibility_alignment:
+        type: "float"
+        description: "ResponsibilityVectorとMotionの方向の一致度"
+      stillness_recovery:
+        type: "float"
+        description: "動作後に静けさへ戻る度合い"
+      notes:
+        type: "string | null"
+        description: "人間用メモ・解釈ログ"
+
+metrics:
+  motion_fit:
+    description: "動きの予測結果が元のSceneStateとどれだけ整合しているか"
+    candidates:
+      - "ラベル一致率"
+      - "特徴量類似度（cosine, euclidean 等）"
+  responsibility_alignment:
+    description: "責任ベクトルとMotionStateの方向性がどれだけ一致しているか"
+    candidates:
+      - "内積 / コサイン類似度"
+  stillness_recovery:
+    description: "高モーション後にStillnessFieldが回復するか"
+    candidates:
+      - "時間経過によるglobal_stillnessの勾配"
+      - "閾値超え時間の長さ"
+
+formula:
+  expression: "C_total = alpha * motion_fit + beta * responsibility_alignment + gamma * stillness_recovery"
+  parameters:
+    alpha: 0.4
+    beta: 0.4
+    gamma: 0.2
+
+interfaces:
+  consumes:
+    from_Genesys:
+      objects:
+        - "SceneState"
+        - "ResponsibilityVector"
+    from_Stillness:
+      objects:
+        - "SceneState_normalized"
+        - "StillnessField"
+    from_Motion:
+      objects:
+        - "MotionState"
+  provides:
+    to_outer:
+      objects:
+        - "CoherenceScore"
+      use_cases:
+        - "実験ログ"
+        - "モデル選択"
+        - "フィードバック可視化"
+        - "Stillness in Motion スコアへの統合"
+
+feedback_extensions:
+  responsibility_update:
+    enabled: false
+    description: "CoherenceScoreに基づきResponsibilityVectorを更新する拡張機能"
+  training_signal:
+    enabled: false
+    description: "CoherenceScoreを損失関数の一部として使う拡張"
+
+notes:
+  future_extensions:
+    - "ノリエントロピーとの統合指標"
+    - "Stillness in Motion スコアを CoherenceScore の上位概念として定義"
+
+self_similarity:
+  local_GSMC_role:
+    micro: >
+      単発の動き・短いウィンドウに対して、
+      直前直後との整合性や、その瞬間だけ浮いていないかを評価する。
+    meso: >
+      フレーズ全体としての意味のつながり・流れの自然さ・
+      “この塊として筋が通っているか”を評価する。
+    macro: >
+      曲全体・セッション全体・実験全体として、
+      コンセプト・音・動き・空気感が一貫しているかを総合評価する。
+      次のサイクルへのフィードバックの入口にもなる。
+
+  corresponds_to:
+    - layer: "Genesys"
+      via: "次のサイクルの初期条件(G層)を決めるフィードバック源として機能する点。"
+    - layer: "Stillness"
+      via: "全体としてどこに落ち着くか(収束するか)という評価が、静けさ/基準点の評価と自己相似。"
+    - layer: "Motion"
+      via: "全体の流れを俯瞰し、Time方向の良し悪しを判断する点で“上位のMotion”的な役割を持つ。"
+
+  similarity_maps_ref:
+    - "MacroCoherence_to_MicroGenesys"

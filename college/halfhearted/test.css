@@ -1,0 +1,26 @@
+body {
+    /*ページ全体の背景色をベージュに*/
+    background: #fffbf4;
+    /*全文字を中央揃えに*/
+    text-align: center;
+  }
+  h1 {
+    /*h1タグ内の文字色を変える*/
+    color: #f89174;
+  }
+  #headline {
+    /*id="headline"の下に点線を引く*/
+    border-bottom: dotted 2px #f89174;
+  }
+  #headline p {
+    /*id="headline"の中のフォントサイズを1.2倍に*/
+    font-size: 1.2em;
+  }
+  h2 {
+    /*h2タグの文字色をオレンジに*/
+    color:orange;
+  }
+  a {
+    /*リンクの文字色をグレイに*/
+    color:gray;
+  }

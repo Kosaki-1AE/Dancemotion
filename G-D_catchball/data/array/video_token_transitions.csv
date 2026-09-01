@@ -1,0 +1,11 @@
+source,target,count
+video_tok_0,video_tok_5,2
+video_tok_5,video_tok_0,1
+video_tok_0,video_tok_3,3
+video_tok_3,video_tok_0,3
+video_tok_5,video_tok_3,1
+video_tok_3,video_tok_2,1
+video_tok_2,video_tok_6,1
+video_tok_6,video_tok_4,1
+video_tok_4,video_tok_7,1
+video_tok_7,video_tok_1,1
