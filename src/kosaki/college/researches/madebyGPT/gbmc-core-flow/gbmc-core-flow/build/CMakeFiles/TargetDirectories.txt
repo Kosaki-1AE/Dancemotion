@@ -1,3 +1,0 @@
-/mnt/c/Users/kos04/Downloads/gbmc-core-flow/gbmc-core-flow/build/CMakeFiles/gbmc_flow_demo.dir
-/mnt/c/Users/kos04/Downloads/gbmc-core-flow/gbmc-core-flow/build/CMakeFiles/edit_cache.dir
-/mnt/c/Users/kos04/Downloads/gbmc-core-flow/gbmc-core-flow/build/CMakeFiles/rebuild_cache.dir

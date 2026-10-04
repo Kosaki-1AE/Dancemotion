@@ -1,3 +1,0 @@
-/mnt/c/Users/kos04/Downloads/gbmc-map/gbmc-map/build/CMakeFiles/gbmc_map.dir
-/mnt/c/Users/kos04/Downloads/gbmc-map/gbmc-map/build/CMakeFiles/edit_cache.dir
-/mnt/c/Users/kos04/Downloads/gbmc-map/gbmc-map/build/CMakeFiles/rebuild_cache.dir

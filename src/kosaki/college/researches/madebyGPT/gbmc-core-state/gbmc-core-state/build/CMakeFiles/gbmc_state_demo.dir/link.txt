@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/gbmc_state_demo.dir/src/main.cpp.o -o gbmc_state_demo 
